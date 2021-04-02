@@ -1,0 +1,36 @@
+---
+title: "ProjectProposal"
+author: "Breanna Schneider, Avery Chan, Maja Velichkovich"
+date: "3/29/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Group Members: Breanna Schneider, Avery Chan, Maja Velichkovich
+
+## Communication Description:
+> A brief description of how the group will communicate and work together.
+
+All of our group members are in Madison and we can meet in person or over Zoom. We have in person class together on Thursdays. We have created a text message group chat to communicate with each other and a shared Google Drive to share our documents. 
+
+## Questions of interest
+> The question or questions of interest that motivate the planned study.
+
+We want to explore if some of the features of the music correlate with different genres of music. Some of the questions we want to answer are listed below. \
+ * Does the genre of music correlate with the liveliness and danceability? \
+ * Is the year related to the energy and liveliness of the music that year? Has it been increasing or decreasing over the years?\
+ * What features correlate with different genres of music?\
+ * Does the length of the songs relate to the danceability and energy of the songs?
+
+
+## Source of Data
+[Kaggle](https://www.kaggle.com/yamaerenay/spotify-dataset-19212020-160k-tracks)
+
+## Summary of Methods We Plan to Use
+
+We plan to create a bar graph that relates genres (or some other grouping) with different features.
+
+Maybe linear regression for each feature may be a possible model for the data.

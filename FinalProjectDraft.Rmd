@@ -1,0 +1,28 @@
+---
+title: "FinalProjectDraft"
+author: "Breanna Schneider, Avery Chan, Maja Velichkovich"
+date: "4/1/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Final Project
+
+## Introduction
+
+
+## Background 
+
+
+## Analysis
+
+
+## Discussion
+
+
+## References 
+
+[Link to Data](https://www.kaggle.com/yamaerenay/spotify-dataset-19212020-160k-tracks)
