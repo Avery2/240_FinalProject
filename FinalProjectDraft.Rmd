@@ -13,6 +13,67 @@ library(tidyverse)
 ```{r}
 data <- read_csv("data/data.csv")
 data
+
+# genre <- read_csv("data/data_w_genres.csv")
+# genre
+# genre %>% 
+#   group_by(genres) %>% 
+#   summarise(n = n()) %>% 
+#   arrange(desc(n))
+```
+```{r}
+genre <- read_csv("data/data_by_genres.csv")
+# genre %>% 
+#   filter(str_detect(genres, "pop"))
+# 
+# genre %>% 
+#   filter(str_detect(genres, "country"))
+# 
+# genre %>% 
+#   filter(str_detect(genres, "rock"))
+# 
+# genre %>% 
+#   filter(str_detect(genres, "classical"))
+
+# FIND MATCH ONE WORD AND CREAT COUNTS BASED ON THAT - unique words
+
+# year by each feature - condense graph
+
+# genre %>% 
+#   ggplot(aes(x=genres, y=danceability)) +
+#   geom_point() +
+#   theme_bw()
+
+
+year <- read_csv("data/data_by_year.csv")
+
+# All r values
+year %>% 
+  select(-c(year, key, mode)) %>% 
+  cor() %>% 
+  data.frame()
+
+# All graphs
+for (a in colnames(year)[2:12]) {
+  for (b in colnames(year)[2:12]) {
+    if (a > b) {
+      g <- year %>%
+        summarise(
+          a_var = get(a),
+          b_var = get(b)
+        ) %>% 
+        ggplot(aes(x = a_var, y = b_var)) +
+        geom_point() +
+        labs(
+          x = a,
+          y = b
+          )
+      print(g)
+    }
+  }
+}
+
+# combn(colnames(year)[2:12], 2)
 ```
 
 
