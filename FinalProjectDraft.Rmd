@@ -11,38 +11,53 @@ library(tidyverse)
 ```
 
 ```{r}
-# data <- read_csv("data/data.csv")
-
 genre <- read_csv("data/data_by_genres.csv")
-genre
+
 x <- genre %>% 
   select(genres) %>% 
   mutate(
     words = str_split(genres, "\\s|-"),
   )
-
 all_terms <- tibble(term = unlist(x$words, recursive = FALSE))
-# Top terms
-all_terms %>% 
+# Top terms (double counts...)
+genre_term_count <- all_terms %>% 
   group_by(term) %>% 
   summarise(n = n()) %>% 
   arrange(desc(n)) %>% 
   head(20)
 
-# genre %>% 
-#   select(genres) %>% 
-#   mutate(
-#     category = case_when(
-#       str_detect(genres, "pop") ~ "pop",
-#       str_detect(genres, "classical") ~ "classical",
-#       str_detect(genres, "rock") ~ "rock",
-#       str_detect(genres, "hip hop") ~ "hip hop",
-#       TRUE ~ "other"
-#     )
-#   ) %>% 
-#   filter(category == "other")
-#   # group_by(category) %>%
-#   # summarise(n = n())
+genre_term_count$term
+
+# higher in case when get priority
+genre %>% 
+  mutate(
+    simple_genre = case_when(
+      str_detect(genres, genre_term_count$term[1]) ~ genre_term_count$term[1],
+      str_detect(genres, genre_term_count$term[2]) ~ genre_term_count$term[2],
+      str_detect(genres, genre_term_count$term[3]) ~ genre_term_count$term[3],
+      str_detect(genres, genre_term_count$term[4]) ~ genre_term_count$term[4],
+      str_detect(genres, genre_term_count$term[5]) ~ genre_term_count$term[5],
+      str_detect(genres, genre_term_count$term[6]) ~ genre_term_count$term[6],
+      str_detect(genres, genre_term_count$term[7]) ~ genre_term_count$term[7],
+      str_detect(genres, genre_term_count$term[8]) ~ genre_term_count$term[8],
+      str_detect(genres, genre_term_count$term[9]) ~ genre_term_count$term[9],
+      str_detect(genres, genre_term_count$term[10]) ~ genre_term_count$term[10],
+      str_detect(genres, genre_term_count$term[11]) ~ genre_term_count$term[11],
+      str_detect(genres, genre_term_count$term[12]) ~ genre_term_count$term[12],
+      str_detect(genres, genre_term_count$term[13]) ~ genre_term_count$term[13],
+      str_detect(genres, genre_term_count$term[14]) ~ genre_term_count$term[14],
+      str_detect(genres, genre_term_count$term[15]) ~ genre_term_count$term[15],
+      str_detect(genres, genre_term_count$term[16]) ~ genre_term_count$term[16],
+      str_detect(genres, genre_term_count$term[17]) ~ genre_term_count$term[17],
+      str_detect(genres, genre_term_count$term[18]) ~ genre_term_count$term[18],
+      str_detect(genres, genre_term_count$term[19]) ~ genre_term_count$term[19],
+      str_detect(genres, genre_term_count$term[20]) ~ genre_term_count$term[20],
+      TRUE ~ "other"
+    )
+  ) %>% 
+  group_by(simple_genre) %>% 
+  summarise(n = n()) %>% 
+  arrange(desc(n))
 ```
 
 ```{r}
