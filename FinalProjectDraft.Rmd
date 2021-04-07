@@ -43,8 +43,8 @@ genre <- read_csv("data/data_by_genres.csv")
 #   ggplot(aes(x=genres, y=danceability)) +
 #   geom_point() +
 #   theme_bw()
-
-
+```
+```{r}
 year <- read_csv("data/data_by_year.csv")
 
 # All r values
@@ -52,7 +52,10 @@ year %>%
   select(-c(year, key, mode)) %>% 
   cor() %>% 
   data.frame()
+```
 
+
+```{r}
 # All graphs
 for (a in colnames(year)[2:12]) {
   for (b in colnames(year)[2:12]) {
@@ -73,7 +76,27 @@ for (a in colnames(year)[2:12]) {
   }
 }
 
+# https://statsandr.com/blog/correlation-coefficient-and-correlation-test-in-r/
+
+pairs(year[,c(5, 2, 7, 8)])
+
+pairs(year[2:12])
+
 # combn(colnames(year)[2:12], 2)
+```
+```{r}
+# > install.packages("corrplot")
+library(corrplot)
+
+corrplot(cor(year),
+  method = "number",
+  type = "upper" # show only upper side
+)
+
+corrplot(cor(year[,c(5, 2, 7, 8)]),
+  method = "number",
+  type = "upper" # show only upper side
+)
 ```
 
 
