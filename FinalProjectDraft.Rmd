@@ -11,39 +11,40 @@ library(tidyverse)
 ```
 
 ```{r}
-data <- read_csv("data/data.csv")
-data
+# data <- read_csv("data/data.csv")
 
-# genre <- read_csv("data/data_w_genres.csv")
-# genre
-# genre %>% 
-#   group_by(genres) %>% 
-#   summarise(n = n()) %>% 
-#   arrange(desc(n))
-```
-```{r}
 genre <- read_csv("data/data_by_genres.csv")
-# genre %>% 
-#   filter(str_detect(genres, "pop"))
-# 
-# genre %>% 
-#   filter(str_detect(genres, "country"))
-# 
-# genre %>% 
-#   filter(str_detect(genres, "rock"))
-# 
-# genre %>% 
-#   filter(str_detect(genres, "classical"))
+genre
+x <- genre %>% 
+  select(genres) %>% 
+  mutate(
+    words = str_split(genres, "\\s|-"),
+  )
 
-# FIND MATCH ONE WORD AND CREAT COUNTS BASED ON THAT - unique words
-
-# year by each feature - condense graph
+all_terms <- tibble(term = unlist(x$words, recursive = FALSE))
+# Top terms
+all_terms %>% 
+  group_by(term) %>% 
+  summarise(n = n()) %>% 
+  arrange(desc(n)) %>% 
+  head(20)
 
 # genre %>% 
-#   ggplot(aes(x=genres, y=danceability)) +
-#   geom_point() +
-#   theme_bw()
+#   select(genres) %>% 
+#   mutate(
+#     category = case_when(
+#       str_detect(genres, "pop") ~ "pop",
+#       str_detect(genres, "classical") ~ "classical",
+#       str_detect(genres, "rock") ~ "rock",
+#       str_detect(genres, "hip hop") ~ "hip hop",
+#       TRUE ~ "other"
+#     )
+#   ) %>% 
+#   filter(category == "other")
+#   # group_by(category) %>%
+#   # summarise(n = n())
 ```
+
 ```{r}
 year <- read_csv("data/data_by_year.csv")
 
@@ -57,24 +58,24 @@ year %>%
 
 ```{r}
 # All graphs
-for (a in colnames(year)[2:12]) {
-  for (b in colnames(year)[2:12]) {
-    if (a > b) {
-      g <- year %>%
-        summarise(
-          a_var = get(a),
-          b_var = get(b)
-        ) %>% 
-        ggplot(aes(x = a_var, y = b_var)) +
-        geom_point() +
-        labs(
-          x = a,
-          y = b
-          )
-      print(g)
-    }
-  }
-}
+# for (a in colnames(year)[2:12]) {
+#   for (b in colnames(year)[2:12]) {
+#     if (a > b) {
+#       g <- year %>%
+#         summarise(
+#           a_var = get(a),
+#           b_var = get(b)
+#         ) %>% 
+#         ggplot(aes(x = a_var, y = b_var)) +
+#         geom_point() +
+#         labs(
+#           x = a,
+#           y = b
+#           )
+#       print(g)
+#     }
+#   }
+# }
 
 # https://statsandr.com/blog/correlation-coefficient-and-correlation-test-in-r/
 
@@ -84,6 +85,7 @@ pairs(year[2:12])
 
 # combn(colnames(year)[2:12], 2)
 ```
+
 ```{r}
 # > install.packages("corrplot")
 library(corrplot)
