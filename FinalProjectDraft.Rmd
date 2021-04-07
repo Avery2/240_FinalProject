@@ -13,10 +13,12 @@ library(tidyverse)
 ```{r}
 genre <- read_csv("data/data_by_genres.csv")
 
+glimpse(genre)
+
 x <- genre %>% 
   select(genres) %>% 
   mutate(
-    words = str_split(genres, "\\s|-"),
+    words = str_split(genres, "\\s"),
   )
 all_terms <- tibble(term = unlist(x$words, recursive = FALSE))
 # Top terms (double counts...)
@@ -25,11 +27,11 @@ genre_term_count <- all_terms %>%
   summarise(n = n()) %>% 
   arrange(desc(n)) %>% 
   head(20)
-
-genre_term_count$term
+genre_term_count
+# genre_term_count$term
 
 # higher in case when get priority
-genre %>% 
+condensed <- genre %>% 
   mutate(
     simple_genre = case_when(
       str_detect(genres, genre_term_count$term[1]) ~ genre_term_count$term[1],
@@ -54,10 +56,48 @@ genre %>%
       str_detect(genres, genre_term_count$term[20]) ~ genre_term_count$term[20],
       TRUE ~ "other"
     )
-  ) %>% 
+  )
+```
+
+
+```{r}
+condensed %>% 
   group_by(simple_genre) %>% 
   summarise(n = n()) %>% 
   arrange(desc(n))
+
+condensed %>% 
+  group_by(simple_genre) %>% 
+  summarise(n = n()) %>% 
+  arrange(desc(n)) %>% 
+  ggplot(aes(y = simple_genre, x = n)) +
+  geom_col()
+
+condensed %>% 
+  ggplot(aes(y = simple_genre, x = instrumentalness)) +
+  geom_point()
+
+condensed %>%
+  select(simple_genre, instrumentalness) %>% 
+  group_by(simple_genre) %>%
+  summarise(mean_inst = mean(instrumentalness)) %>% 
+  ggplot(aes(y = simple_genre, x = mean_inst)) +
+  geom_col()
+
+condensed %>%
+  ggplot(aes(y = simple_genre, x = danceability)) +
+  geom_boxplot()
+```
+
+
+```{r}
+# for (var_name in colnames(year)[2:12]) {
+#   condensed %>%
+#     ggplot(aes(y = simple_genre, x = get(condensed, var_name))) +
+#     geom_boxplot() %>%
+#     print()
+# }
+
 ```
 
 ```{r}
