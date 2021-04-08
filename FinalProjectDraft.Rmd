@@ -10,9 +10,14 @@ output:
 
 # Introduction
 
+Spotify is one of the larger music streaming services available today with 345 million active users ( cite source https://newsroom.spotify.com/company-info/ ). Instead of having to buy cds or download every song to listen to, Spotify allows access to millions of songs without having to download them on electronic devices.  
+In our project, we want to answer if energy, acousticness, loudness, danceability, and liveness have a specific pattern over the years. In addition, our other question is if a feature has a strong correlation to certain other features. Certain features will have strong patterns relating to the year and some of the features will be strongly correlated to other features. We especially think that energy and danceability will have a strong correlation, along with liveness and energy.
 
 # Background 
 
+The data we are using is based on Spotify data from 1921 to 2020 including over 175,000 audio tracks.We found our data on Kaggle at the link https://www.kaggle.com/yamaerenay/spotify-dataset-19212020-160k-tracks?select=data_by_artist_o.csv. This dataset groups the data by artist, genre, and year. There are nine different variables measured in the dataset. They are acousticness, danceability, duration, energy, liveness, instrumentalness, loudness, speechiness and tempo. 
+For our project, we decided to focus on energy, acousticness, liveness, loudness and danceability. Energy is a perceptual measure of the intensity and activity of a track on a scale from 0.0 to 1.0. Some of the perceptual features that are included in this are dynamic range, perceived loudness, timbre, onset rate, and general entropy. Liveness ranges from 0 to 1 and detects if an audience is present in a recording. If the liveness value is above 0.8, there is a strong likelihood that the track is live. Acousticness is the confidence measure of the track being acoustic. It varies from 0.0 to 1.0, with 1.0 representing high confidence that the track is acoustic. Loudness ranges from -60 to 0 and is measured in decibels (dB). It suggests the overall loudless averaged over the entire track. Lastly, the measure of danceability includes a combination of tempo,  rhythm stability, beat strength and regularity. It rates how suitable a track is for dancing from 0.0 to 1.0 with 1 being the most danceable.
+In the rest of our report, we intend to first graph each feature by year and add a linear regression line to see if there are any trends over the years. Then, we will test the correlations between two features to see if they are strongly related or not related. In the end, we hope to discover how different features have changed over the years and how music has evolved.
 
 # Data
 
