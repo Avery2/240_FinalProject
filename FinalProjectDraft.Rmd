@@ -37,6 +37,7 @@ knitr::opts_chunk$set(echo = FALSE)
 library(tidyverse)
 # install.packages(DT)
 library(DT)
+options(dplyr.summarise.inform = FALSE)
 ```
 
 ```{r}
@@ -111,22 +112,35 @@ condensed %>%
   summarise(n = n()) %>% 
   arrange(desc(n)) %>% 
   ggplot(aes(y = simple_genre, x = n)) +
-  geom_col()
+  geom_col() +
+  theme_bw()
+
+condensed %>% 
+  group_by(simple_genre) %>% 
+  filter(simple_genre != "other") %>% 
+  summarise(n = n()) %>% 
+  arrange(desc(n)) %>% 
+  ggplot(aes(y = simple_genre, x = n, fill = simple_genre)) +
+  geom_col() +
+  theme_bw()
 
 condensed %>% 
   ggplot(aes(y = simple_genre, x = instrumentalness)) +
-  geom_point()
+  geom_point() +
+  theme_bw()
 
 condensed %>%
   select(simple_genre, instrumentalness) %>% 
   group_by(simple_genre) %>%
   summarise(mean_inst = mean(instrumentalness)) %>% 
   ggplot(aes(y = simple_genre, x = mean_inst)) +
-  geom_col()
+  geom_col() +
+  theme_bw()
 
 condensed %>%
-  ggplot(aes(y = simple_genre, x = danceability)) +
-  geom_boxplot()
+  ggplot(aes(y = simple_genre, x = danceability, fill = simple_genre)) +
+  geom_boxplot() +
+  theme_bw()
 ```
 
 ## All possible graphs of feature v feature
