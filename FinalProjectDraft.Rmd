@@ -2,8 +2,29 @@
 title: "FinalProjectDraft"
 author: "Breanna Schneider, Avery Chan, Maja Velichkovich"
 date: "4/1/2021"
-output: html_document
+output:
+  html_document:
+    toc: true
+    theme: united
 ---
+
+# Introduction
+
+
+# Background 
+
+
+# Analysis
+
+
+# Discussion
+
+
+# References 
+
+[Link to Data](https://www.kaggle.com/yamaerenay/spotify-dataset-19212020-160k-tracks)
+
+# Testing code / temporary
 
 ```{r setup, include=FALSE, echo = TRUE}
 knitr::opts_chunk$set(echo = FALSE)
@@ -23,16 +44,24 @@ x <- genre %>%
     words = str_split(genres, "\\s"),
   )
 all_terms <- tibble(term = unlist(x$words, recursive = FALSE))
+```
+
+## Top 20 words in genres (to simplify genre categories)
+
+```{r}
 # Top terms (double counts...)
 genre_term_count <- all_terms %>% 
   group_by(term) %>% 
   summarise(n = n()) %>% 
   arrange(desc(n)) %>% 
   head(20)
+
 genre_term_count %>% 
   DT::datatable()
-# genre_term_count$term
+```
 
+
+```{r}
 # higher in case when get priority
 condensed <- genre %>% 
   mutate(
@@ -60,16 +89,17 @@ condensed <- genre %>%
       TRUE ~ "other"
     )
   )
-```
 
-
-```{r}
 condensed %>% 
   group_by(simple_genre) %>% 
   summarise(n = n()) %>% 
   arrange(desc(n)) %>% 
   DT::datatable()
+```
 
+## Test graphs of condensed genres
+
+```{r}
 condensed %>% 
   group_by(simple_genre) %>% 
   summarise(n = n()) %>% 
@@ -93,6 +123,7 @@ condensed %>%
   geom_boxplot()
 ```
 
+## All possible graphs of feature v feature
 
 ```{r}
 # for (var_name in colnames(year)[2:12]) {
@@ -103,6 +134,8 @@ condensed %>%
 # }
 
 ```
+
+## All r-values
 
 ```{r}
 year <- read_csv("data/data_by_year.csv", col_types = cols())
@@ -115,6 +148,7 @@ year %>%
   DT::datatable()
 ```
 
+## Displaying all r-values
 
 ```{r}
 # All graphs
@@ -160,22 +194,3 @@ corrplot(cor(year[,c(5, 2, 7, 8)]),
   type = "upper" # show only upper side
 )
 ```
-
-
-# Final Project
-
-## Introduction
-
-
-## Background 
-
-
-## Analysis
-
-
-## Discussion
-
-
-## References 
-
-[Link to Data](https://www.kaggle.com/yamaerenay/spotify-dataset-19212020-160k-tracks)
