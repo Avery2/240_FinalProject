@@ -5,15 +5,17 @@ date: "4/1/2021"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+```{r setup, include=FALSE, echo = TRUE}
+knitr::opts_chunk$set(echo = FALSE)
 library(tidyverse)
+# install.packages(DT)
+library(DT)
 ```
 
 ```{r}
-genre <- read_csv("data/data_by_genres.csv")
+genre <- read_csv("data/data_by_genres.csv", col_types = cols())
 
-glimpse(genre)
+# glimpse(genre)
 
 x <- genre %>% 
   select(genres) %>% 
@@ -27,7 +29,8 @@ genre_term_count <- all_terms %>%
   summarise(n = n()) %>% 
   arrange(desc(n)) %>% 
   head(20)
-genre_term_count
+genre_term_count %>% 
+  DT::datatable()
 # genre_term_count$term
 
 # higher in case when get priority
@@ -64,7 +67,8 @@ condensed <- genre %>%
 condensed %>% 
   group_by(simple_genre) %>% 
   summarise(n = n()) %>% 
-  arrange(desc(n))
+  arrange(desc(n)) %>% 
+  DT::datatable()
 
 condensed %>% 
   group_by(simple_genre) %>% 
@@ -101,13 +105,14 @@ condensed %>%
 ```
 
 ```{r}
-year <- read_csv("data/data_by_year.csv")
+year <- read_csv("data/data_by_year.csv", col_types = cols())
 
 # All r values
 year %>% 
   select(-c(year, key, mode)) %>% 
   cor() %>% 
-  data.frame()
+  data.frame() %>% 
+  DT::datatable()
 ```
 
 
