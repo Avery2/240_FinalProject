@@ -4,7 +4,7 @@ author: "Breanna Schneider, Avery Chan, Maja Velichkovich"
 date: "4/1/2021"
 output:
   html_document:
-    toc: true
+    toc: yes
     theme: united
 ---
 
@@ -14,10 +14,16 @@ output:
 # Background 
 
 
+# Data
+
+
+# Graphs
+
+
 # Analysis
 
 
-# Discussion
+# Discussion (Interpretation)
 
 
 # References 
@@ -144,6 +150,7 @@ year <- read_csv("data/data_by_year.csv", col_types = cols())
 year %>% 
   select(-c(year, key, mode)) %>% 
   cor() %>% 
+  round(digits = 2) %>% 
   data.frame() %>% 
   DT::datatable()
 ```
@@ -184,9 +191,45 @@ pairs(year[2:12])
 # > install.packages("corrplot")
 library(corrplot)
 
-corrplot(cor(year),
+# year %>% glimpse()
+
+year <- year %>% 
+  rename(
+    yr = year,
+    ac = acousticness,
+    db = danceability,
+    dur = duration_ms,
+    en = energy,
+    ins = instrumentalness,
+    li = liveness,
+    lo = loudness,
+    sp = speechiness,
+    tmp = tempo,
+    val = valence,
+    pop = popularity,
+    k = key,
+    m = mode
+  )
+```
+
+
+```{r}
+corrplot(
+  round(cor(year[2:12]), 1),
   method = "number",
   type = "upper" # show only upper side
+)
+
+corrplot(
+  round(cor(year[2:12]), 1),
+  method = "color",
+  type = "upper" # show only upper side
+)
+
+corrplot.mixed(
+  round(cor(year[2:12]), 1),
+  lower = "number",
+  upper = "color"
 )
 
 corrplot(cor(year[,c(5, 2, 7, 8)]),
