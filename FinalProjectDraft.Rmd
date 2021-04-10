@@ -1,73 +1,285 @@
 ---
 title: "FinalProjectDraft"
 author: "Breanna Schneider, Avery Chan, Maja Velichkovich"
-date: "4/1/2021"
+date: "4/11/2021"
 output:
   html_document:
     toc: yes
+    toc_float: true
     theme: united
 ---
 
-# Introduction
-
-Spotify is one of the larger music streaming services available today with 345 million active users ( cite source https://newsroom.spotify.com/company-info/ ). Instead of having to buy cds or download every song to listen to, Spotify allows access to millions of songs without having to download them on electronic devices.  
-In our project, we want to answer if energy, acousticness, loudness, danceability, and liveness have a specific pattern over the years. In addition, our other question is if a feature has a strong correlation to certain other features. Certain features will have strong patterns relating to the year and some of the features will be strongly correlated to other features. We especially think that energy and danceability will have a strong correlation, along with liveness and energy.
-
-# Background 
-
-The data we are using is based on Spotify data from 1921 to 2020 including over 175,000 audio tracks.We found our data on Kaggle at the link https://www.kaggle.com/yamaerenay/spotify-dataset-19212020-160k-tracks?select=data_by_artist_o.csv. This dataset groups the data by artist, genre, and year. There are nine different variables measured in the dataset. They are acousticness, danceability, duration, energy, liveness, instrumentalness, loudness, speechiness and tempo. 
-For our project, we decided to focus on energy, acousticness, liveness, loudness and danceability. Energy is a perceptual measure of the intensity and activity of a track on a scale from 0.0 to 1.0. Some of the perceptual features that are included in this are dynamic range, perceived loudness, timbre, onset rate, and general entropy. Liveness ranges from 0 to 1 and detects if an audience is present in a recording. If the liveness value is above 0.8, there is a strong likelihood that the track is live. Acousticness is the confidence measure of the track being acoustic. It varies from 0.0 to 1.0, with 1.0 representing high confidence that the track is acoustic. Loudness ranges from -60 to 0 and is measured in decibels (dB). It suggests the overall loudless averaged over the entire track. Lastly, the measure of danceability includes a combination of tempo,  rhythm stability, beat strength and regularity. It rates how suitable a track is for dancing from 0.0 to 1.0 with 1 being the most danceable.
-In the rest of our report, we intend to first graph each feature by year and add a linear regression line to see if there are any trends over the years. Then, we will test the correlations between two features to see if they are strongly related or not related. In the end, we hope to discover how different features have changed over the years and how music has evolved.
-
-# Data
-
-
-# Graphs
-
-
-# Analysis
-
-
-# Discussion (Interpretation)
-
-
-# References 
-
-[Link to Data](https://www.kaggle.com/yamaerenay/spotify-dataset-19212020-160k-tracks)
-
-# Testing code / temporary
-
 ```{r setup, include=FALSE, echo = TRUE}
-knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(echo = FALSE, message=FALSE)
 library(tidyverse)
 # install.packages(DT)
 library(DT)
 options(dplyr.summarise.inform = FALSE)
 ```
 
+# Introduction
+
+Spotify is one of the larger music streaming services available today with 345 million active users ( cite source https://newsroom.spotify.com/company-info/ ). Instead of having to buy cds or download every song to listen to, Spotify allows access to millions of songs without having to download them on electronic devices. 
+
+In our project, we want to answer if energy, acousticness, loudness, danceability, and liveness have a specific pattern over the years. In addition, our other question is if a feature has a strong correlation to certain other features. Certain features will have strong patterns relating to the year and some of the features will be strongly correlated to other features. We especially think that energy and danceability will have a strong correlation, along with liveness and energy.
+
+# Background 
+
+The data we are using is based on Spotify data from 1921 to 2020 including over 175,000 audio tracks. We found our data on Kaggle at the link https://www.kaggle.com/yamaerenay/spotify-dataset-19212020-160k-tracks?select=data_by_artist_o.csv. This dataset groups the data by artist, genre, and year. There are nine different variables measured in the dataset. They are acousticness, danceability, duration, energy, liveness, instrumentalness, loudness, speechiness and tempo. 
+
+For our project, we decided to focus on energy, acousticness, liveness, loudness and danceability. Energy is a perceptual measure of the intensity and activity of a track on a scale from 0.0 to 1.0. Some of the perceptual features that are included in this are dynamic range, perceived loudness, timbre, onset rate, and general entropy. Liveness ranges from 0 to 1 and detects if an audience is present in a recording. If the liveness value is above 0.8, there is a strong likelihood that the track is live. Acousticness is the confidence measure of the track being acoustic. It varies from 0.0 to 1.0, with 1.0 representing high confidence that the track is acoustic. Loudness ranges from -60 to 0 and is measured in decibels (dB). It suggests the overall loudless averaged over the entire track. Lastly, the measure of danceability includes a combination of tempo,  rhythm stability, beat strength and regularity. It rates how suitable a track is for dancing from 0.0 to 1.0 with 1 being the most danceable.
+
+In the rest of our report, we intend to first graph each feature by year and add a linear regression line to see if there are any trends over the years. Then, we will test the correlations between two features to see if they are strongly related or not related. In the end, we hope to discover how different features have changed over the years and how music has evolved.
+
+# Data
+
+## Genre Condensation
+
 ```{r}
 genre <- read_csv("data/data_by_genres.csv", col_types = cols())
-
-# glimpse(genre)
-
+num_genres <- genre %>% nrow()
 x <- genre %>% 
   select(genres) %>% 
   mutate(
     words = str_split(genres, "\\s"),
   )
 all_terms <- tibble(term = unlist(x$words, recursive = FALSE))
-```
-
-## Top 20 words in genres (to simplify genre categories)
-
-```{r}
 # Top terms (double counts...)
 genre_term_count <- all_terms %>% 
   group_by(term) %>% 
   summarise(n = n()) %>% 
   arrange(desc(n)) %>% 
   head(20)
+genre_term_count %>% 
+  DT::datatable()
+```
 
+There was ``r num_genres`` genres. We condensed these into the top 20 occurring terms in these genres using regular expressions and counting the occurrences.
+
+```{r}
+# Top terms (double counts...)
+all_terms %>% 
+  group_by(term) %>% 
+  summarise(n = n()) %>% 
+  arrange(desc(n)) %>% 
+  head(20) %>% 
+  DT::datatable()
+```
+
+> Could include all genres here just to show
+
+```{r}
+genre %>% 
+  select(genres) %>% 
+  DT::datatable()
+```
+
+> Could show all generes and counts here (or like 100) just to show
+
+```{r}
+all_terms %>% 
+  group_by(term) %>% 
+  summarise(n = n()) %>% 
+  arrange(desc(n)) %>% 
+  head(100) %>% 
+  DT::datatable()
+```
+
+We use these top 20 to create a more concisely labeled dataset (along with the label other).
+
+```{r}
+# higher in case when get priority
+condensed <- genre %>% 
+  mutate(
+    simple_genre = case_when(
+      str_detect(genres, genre_term_count$term[1]) ~ genre_term_count$term[1],
+      str_detect(genres, genre_term_count$term[2]) ~ genre_term_count$term[2],
+      str_detect(genres, genre_term_count$term[3]) ~ genre_term_count$term[3],
+      str_detect(genres, genre_term_count$term[4]) ~ genre_term_count$term[4],
+      str_detect(genres, genre_term_count$term[5]) ~ genre_term_count$term[5],
+      str_detect(genres, genre_term_count$term[6]) ~ genre_term_count$term[6],
+      str_detect(genres, genre_term_count$term[7]) ~ genre_term_count$term[7],
+      str_detect(genres, genre_term_count$term[8]) ~ genre_term_count$term[8],
+      str_detect(genres, genre_term_count$term[9]) ~ genre_term_count$term[9],
+      str_detect(genres, genre_term_count$term[10]) ~ genre_term_count$term[10],
+      str_detect(genres, genre_term_count$term[11]) ~ genre_term_count$term[11],
+      str_detect(genres, genre_term_count$term[12]) ~ genre_term_count$term[12],
+      str_detect(genres, genre_term_count$term[13]) ~ genre_term_count$term[13],
+      str_detect(genres, genre_term_count$term[14]) ~ genre_term_count$term[14],
+      str_detect(genres, genre_term_count$term[15]) ~ genre_term_count$term[15],
+      str_detect(genres, genre_term_count$term[16]) ~ genre_term_count$term[16],
+      str_detect(genres, genre_term_count$term[17]) ~ genre_term_count$term[17],
+      str_detect(genres, genre_term_count$term[18]) ~ genre_term_count$term[18],
+      str_detect(genres, genre_term_count$term[19]) ~ genre_term_count$term[19],
+      str_detect(genres, genre_term_count$term[20]) ~ genre_term_count$term[20],
+      TRUE ~ "other"
+    )
+  )
+
+condensed %>% 
+  group_by(simple_genre) %>% 
+  summarise(n = n()) %>% 
+  arrange(desc(n)) %>% 
+  DT::datatable()
+```
+
+## r-values
+
+ALl possible combinations of features to create many r-values.
+
+```{r}
+year <- read_csv("data/data_by_year.csv", col_types = cols())
+
+# All r values
+year %>% 
+  select(-c(year, key, mode)) %>% 
+  cor() %>% 
+  round(digits = 2) %>% 
+  data.frame() %>% 
+  DT::datatable()
+```
+
+
+# Graphs
+
+## Genre Graphs
+
+```{r}
+condensed %>% 
+  group_by(simple_genre) %>% 
+  summarise(n = n()) %>% 
+  arrange(desc(n)) %>% 
+  ggplot(aes(y = simple_genre, x = n)) +
+  geom_col() +
+  theme_bw()
+
+condensed %>% 
+  group_by(simple_genre) %>% 
+  filter(simple_genre != "other") %>% 
+  summarise(n = n()) %>% 
+  arrange(desc(n)) %>% 
+  ggplot(aes(y = simple_genre, x = n, fill = simple_genre)) +
+  geom_col() +
+  theme_bw()
+
+condensed %>% 
+  ggplot(aes(y = simple_genre, x = instrumentalness)) +
+  geom_point() +
+  theme_bw()
+
+condensed %>%
+  select(simple_genre, instrumentalness) %>% 
+  group_by(simple_genre) %>%
+  summarise(mean_inst = mean(instrumentalness)) %>% 
+  ggplot(aes(y = simple_genre, x = mean_inst)) +
+  geom_col() +
+  theme_bw()
+
+condensed %>%
+  ggplot(aes(y = simple_genre, x = danceability, fill = simple_genre)) +
+  geom_boxplot() +
+  theme_bw()
+```
+
+## r-values
+
+(All / many) combinations graphs:
+```{r}
+pairs(year[,c(5, 2, 7, 8)])
+pairs(year[2:12])
+```
+
+Just display r-value on graphs:
+
+```{r rename-year-tofit}
+# > install.packages("corrplot")
+library(corrplot)
+
+# year %>% glimpse()
+
+year <- year %>% 
+  rename(
+    yr = year,
+    ac = acousticness,
+    db = danceability,
+    dur = duration_ms,
+    en = energy,
+    ins = instrumentalness,
+    li = liveness,
+    lo = loudness,
+    sp = speechiness,
+    tmp = tempo,
+    val = valence,
+    pop = popularity,
+    k = key,
+    m = mode
+  )
+```
+
+```{r special rvalue graphs}
+corrplot(
+  round(cor(year[2:12]), 1),
+  method = "number",
+  type = "upper" # show only upper side
+)
+
+corrplot(
+  round(cor(year[2:12]), 1),
+  method = "color",
+  type = "upper" # show only upper side
+)
+
+corrplot.mixed(
+  round(cor(year[2:12]), 1),
+  lower = "number",
+  upper = "color"
+)
+
+corrplot(cor(year[,c(5, 2, 7, 8)]),
+  method = "number",
+  type = "upper" # show only upper side
+)
+```
+
+
+# Analysis
+
+
+
+# Discussion (Interpretation)
+
+A short-coming of our analysis is that we do not know how many songs are included in the data for each year. Some year’s data may be based on more songs than other years. 
+
+Future work on this dataset could involve testing out more of the features relationships and seeing if they have strong models. We could also look for datasets from other music streaming services, such as Apple Music and Pandora.
+
+# References 
+
+[Link to Kaggle Data](https://www.kaggle.com/yamaerenay/spotify-dataset-19212020-160k-tracks)
+
+<!-- 
+# Testing code / temporary
+
+```{r}
+# HIDE EVERYTHING IN KNIT FILE BELOW THIS LINE
+knitr::opts_chunk$set(results = FALSE, fig.show='hide', warning = FALSE, message = FALSE)
+```
+
+## Top 20 words in genres (to simplify genre categories)
+
+```{r}
+genre <- read_csv("data/data_by_genres.csv", col_types = cols())
+x <- genre %>% 
+  select(genres) %>% 
+  mutate(
+    words = str_split(genres, "\\s"),
+  )
+all_terms <- tibble(term = unlist(x$words, recursive = FALSE))
+# Top terms (double counts...)
+genre_term_count <- all_terms %>% 
+  group_by(term) %>% 
+  summarise(n = n()) %>% 
+  arrange(desc(n)) %>% 
+  head(20)
 genre_term_count %>% 
   DT::datatable()
 ```
@@ -170,8 +382,9 @@ year %>%
   select(-c(year, key, mode)) %>% 
   cor() %>% 
   round(digits = 2) %>% 
-  data.frame() %>% 
-  DT::datatable()
+  data.frame()
+
+  # DT::datatable()
 ```
 
 ## Displaying all r-values
@@ -200,7 +413,6 @@ year %>%
 # https://statsandr.com/blog/correlation-coefficient-and-correlation-test-in-r/
 
 pairs(year[,c(5, 2, 7, 8)])
-
 pairs(year[2:12])
 
 # combn(colnames(year)[2:12], 2)
@@ -256,3 +468,4 @@ corrplot(cor(year[,c(5, 2, 7, 8)]),
   type = "upper" # show only upper side
 )
 ```
+ -->
