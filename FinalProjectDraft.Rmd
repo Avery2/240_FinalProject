@@ -6,7 +6,10 @@ output:
   html_document:
     toc: yes
     toc_float: true
+    number_sections: true
     theme: united
+    df_print: paged
+    code_folding: hide
 ---
 
 ```{r setup, include=FALSE, echo = TRUE}
@@ -33,7 +36,7 @@ In the rest of our report, we intend to first graph each feature by year and add
 
 # Data
 
-## Genre Condensation
+## Genre Condensation {.tabset .tabset-pills}
 
 ```{r}
 genre <- read_csv("data/data_by_genres.csv", col_types = cols())
@@ -50,21 +53,11 @@ genre_term_count <- all_terms %>%
   summarise(n = n()) %>% 
   arrange(desc(n)) %>% 
   head(20)
-genre_term_count %>% 
-  DT::datatable()
 ```
 
 There was ``r num_genres`` genres. We condensed these into the top 20 occurring terms in these genres using regular expressions and counting the occurrences.
 
-```{r}
-# Top terms (double counts...)
-all_terms %>% 
-  group_by(term) %>% 
-  summarise(n = n()) %>% 
-  arrange(desc(n)) %>% 
-  head(20) %>% 
-  DT::datatable()
-```
+### All genres
 
 > Could include all genres here just to show
 
@@ -74,6 +67,8 @@ genre %>%
   DT::datatable()
 ```
 
+### Top 100
+
 > Could show all generes and counts here (or like 100) just to show
 
 ```{r}
@@ -81,9 +76,21 @@ all_terms %>%
   group_by(term) %>% 
   summarise(n = n()) %>% 
   arrange(desc(n)) %>% 
-  head(100) %>% 
-  DT::datatable()
+  head(100)
 ```
+
+### Top 20
+
+```{r}
+# Top terms (double counts...)
+all_terms %>% 
+  group_by(term) %>% 
+  summarise(n = n()) %>% 
+  arrange(desc(n)) %>% 
+  head(20)
+```
+
+### Final Condensed Gernre Dataset
 
 We use these top 20 to create a more concisely labeled dataset (along with the label other).
 
@@ -119,11 +126,12 @@ condensed <- genre %>%
 condensed %>% 
   group_by(simple_genre) %>% 
   summarise(n = n()) %>% 
-  arrange(desc(n)) %>% 
-  DT::datatable()
+  arrange(desc(n))
 ```
 
 ## r-values
+
+### All combinations
 
 ALl possible combinations of features to create many r-values.
 
@@ -135,14 +143,15 @@ year %>%
   select(-c(year, key, mode)) %>% 
   cor() %>% 
   round(digits = 2) %>% 
-  data.frame() %>% 
-  DT::datatable()
+  data.frame()
 ```
 
 
 # Graphs
 
-## Genre Graphs
+## Genre Graphs {.tabset .tabset-pills}
+
+### Condensed genre conunts
 
 ```{r}
 condensed %>% 
@@ -152,7 +161,11 @@ condensed %>%
   ggplot(aes(y = simple_genre, x = n)) +
   geom_col() +
   theme_bw()
+```
 
+### Condensed genre conunts (only top 20) (colored)
+
+```{r}
 condensed %>% 
   group_by(simple_genre) %>% 
   filter(simple_genre != "other") %>% 
@@ -161,12 +174,20 @@ condensed %>%
   ggplot(aes(y = simple_genre, x = n, fill = simple_genre)) +
   geom_col() +
   theme_bw()
+```
 
+### Genres vs instrumentalness (geom_points)
+
+```{r}
 condensed %>% 
   ggplot(aes(y = simple_genre, x = instrumentalness)) +
   geom_point() +
   theme_bw()
+```
 
+### Genres vs instrumentalness (geom_col)
+
+```{r}
 condensed %>%
   select(simple_genre, instrumentalness) %>% 
   group_by(simple_genre) %>%
@@ -174,7 +195,11 @@ condensed %>%
   ggplot(aes(y = simple_genre, x = mean_inst)) +
   geom_col() +
   theme_bw()
+```
 
+### Genres vs instrumentalness (geom_boxplot)
+
+```{r}
 condensed %>%
   ggplot(aes(y = simple_genre, x = danceability, fill = simple_genre)) +
   geom_boxplot() +
@@ -183,11 +208,23 @@ condensed %>%
 
 ## r-values
 
+### Graphs of Combinations of Features {.tabset .tabset-pills}
+
 (All / many) combinations graphs:
+
+#### Select few
+
 ```{r}
 pairs(year[,c(5, 2, 7, 8)])
+```
+
+#### All
+
+```{r}
 pairs(year[2:12])
 ```
+
+### Only r-values {.tabset .tabset-pills}
 
 Just display r-value on graphs:
 
@@ -216,28 +253,33 @@ year <- year %>%
   )
 ```
 
-```{r special rvalue graphs}
+#### Upper number
+
+```{r}
 corrplot(
   round(cor(year[2:12]), 1),
   method = "number",
   type = "upper" # show only upper side
 )
+```
 
+#### Upper color
+
+```{r}
 corrplot(
   round(cor(year[2:12]), 1),
   method = "color",
   type = "upper" # show only upper side
 )
+```
 
+#### Number / Color
+
+```{r}
 corrplot.mixed(
   round(cor(year[2:12]), 1),
   lower = "number",
   upper = "color"
-)
-
-corrplot(cor(year[,c(5, 2, 7, 8)]),
-  method = "number",
-  type = "upper" # show only upper side
 )
 ```
 
