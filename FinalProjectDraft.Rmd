@@ -129,13 +129,42 @@ condensed %>%
   arrange(desc(n))
 ```
 
-## r-values
-
-### All combinations raw
-
-ALl possible combinations of features to create many r-values.
+### Condensed genre conunts
 
 ```{r}
+condensed %>% 
+  group_by(simple_genre) %>% 
+  summarise(n = n()) %>% 
+  arrange(desc(n)) %>% 
+  ggplot(aes(y = simple_genre, x = n, fill=simple_genre)) +
+  geom_col() +
+  theme_bw()
+```
+
+### Condensed genre conunts (removed "other")
+
+```{r}
+condensed %>% 
+  group_by(simple_genre) %>% 
+  filter(simple_genre != "other") %>% 
+  summarise(n = n()) %>% 
+  arrange(desc(n)) %>% 
+  ggplot(aes(y = simple_genre, x = n, fill = simple_genre)) +
+  geom_col() +
+  theme_bw()
+```
+
+## r-values
+
+### All combinations
+
+#### All Combinations {.tabset .tabset-pills}
+
+The second question we want to answer is to see if any features have strong linear correlations to other features. First, we found r-value combinations between all of the features, which is shown in the table below. 
+
+##### A
+
+```{r rows.print=11}
 year <- read_csv("data/data_by_year.csv", col_types = cols())
 
 # All r values
@@ -146,17 +175,15 @@ year %>%
   data.frame()
 ```
 
-### r-values {.tabset .tabset-pills}
+##### B
 
-Just display r-value on graphs:
-
-```{r rename-year-tofit}
+```{r}
 # > install.packages("corrplot")
 library(corrplot)
 
 # year %>% glimpse()
 
-year <- year %>% 
+year2 <- year %>% 
   rename(
     yr = year,
     ac = acousticness,
@@ -173,64 +200,107 @@ year <- year %>%
     k = key,
     m = mode
   )
-```
-
-#### Upper number
-
-```{r}
-corrplot(
-  round(cor(year[2:12]), 1),
-  method = "number",
-  type = "upper" # show only upper side
-)
-```
-
-#### Upper color
-
-```{r}
-corrplot(
-  round(cor(year[2:12]), 1),
-  method = "color",
-  type = "upper" # show only upper side
-)
-```
-
-#### Number / Color
-
-```{r}
 corrplot.mixed(
-  round(cor(year[2:12]), 1),
+  round(cor(year2[2:12]), 1),
   lower = "number",
   upper = "color"
 )
 ```
 
+#### Filter r values
+
+As this table shows, some features seem to have strong linear relationships, while some features seem to not have a strong linear relationship. Next, we filtered for the absolute value of r-values only over .9 to find the strongest feature relations. 
+
+```{r rows.print=11}
+year <- read_csv("data/data_by_year.csv", col_types = cols())
+
+# All r values
+allr <- year %>%
+  select(-c(year, key, mode)) %>%
+  cor() %>%
+  round(digits = 2) %>%
+  data.frame()
+
+library(corrr)
+allr2 <- year %>% 
+  select(-c(year, key, mode)) %>% 
+  correlate()
+
+allr3 <- allr2
+
+new <- allr2
+
+threshold = 0.9
+b1 <- allr3 < threshold
+b2 <- allr3 > -threshold
+
+allr3[b1 & b2] <- NA # only check values that are above threshold for r
+allr3
+
+new[b1 & b2] <- 0
+
+filtered <- new %>% 
+  select(-c(term))
+
+# corrplot.mixed(
+#   is.corr = FALSE,
+#   round(filtered, 1),
+#   lower = "number",
+#   upper = "color"
+# )
+```
+
+#### Filtered Graphed
+
+Energy is included in each of the three strongest correlations. Energy is strongly related to acousticness, loudness and tempo. The three plots show each of the three features graphed vs energy. Each graph includes a line with a linear method to show the approximate linear regression line. While an increase in acousticness relates to a decrease in energy, an increase in loudness and tempo relates to an increase in energy.
+
+```{r}
+# year %>% 
+#   ggplot(aes(x = energy, y = acousticness)) +
+#   geom_point() +
+#   geom_smooth(method = "lm") +
+#   theme_bw()
+# 
+# year %>% 
+#   ggplot(aes(x = energy, y = loudness)) +
+#   geom_point() +
+#   geom_smooth(method = "lm") +
+#   theme_bw()
+# 
+# year %>% 
+#   ggplot(aes(x = energy, y = tempo)) +
+#   geom_point() +
+#   geom_smooth(method = "lm") +
+#   theme_bw()
+
+year %>% 
+  ggplot(aes(y = energy, x = acousticness)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  theme_bw()
+
+year %>% 
+  ggplot(aes(y = energy, x = loudness)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  theme_bw()
+
+year %>% 
+  ggplot(aes(y = energy, x = tempo)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  theme_bw()
+```
+
+#### ???
+
+```{r}
+pairs(year[,c(5, 2, 8, 10)])
+correlate(year[,c(5, 2, 8, 10)])
+```
+
+
 ## Genre Graphs {.tabset .tabset-pills}
-
-### Condensed genre conunts
-
-```{r}
-condensed %>% 
-  group_by(simple_genre) %>% 
-  summarise(n = n()) %>% 
-  arrange(desc(n)) %>% 
-  ggplot(aes(y = simple_genre, x = n)) +
-  geom_col() +
-  theme_bw()
-```
-
-### Condensed genre conunts (only top 20) (colored)
-
-```{r}
-condensed %>% 
-  group_by(simple_genre) %>% 
-  filter(simple_genre != "other") %>% 
-  summarise(n = n()) %>% 
-  arrange(desc(n)) %>% 
-  ggplot(aes(y = simple_genre, x = n, fill = simple_genre)) +
-  geom_col() +
-  theme_bw()
-```
 <!--
 ### Genres vs instrumentalness (geom_points)
 
@@ -256,7 +326,13 @@ condensed %>%
 ```
 -->
 
-### Genres vs acousticness (geom_boxplot)
+### Explaination
+
+WOrds
+
+### Boxplots {.tabset .tabset-pills}
+
+#### Genres vs acousticness (geom_boxplot)
 
 ```{r}
 condensed %>%
@@ -265,7 +341,7 @@ condensed %>%
   theme_bw()
 ```
 
-### Genres vs danceability (geom_boxplot)
+#### Genres vs danceability (geom_boxplot)
 
 ```{r}
 condensed %>%
@@ -274,7 +350,7 @@ condensed %>%
   theme_bw()
 ```
 
-### Genres vs duration_ms (geom_boxplot)
+#### Genres vs duration_ms (geom_boxplot)
 
 ```{r}
 condensed %>%
@@ -283,7 +359,7 @@ condensed %>%
   theme_bw()
 ```
 
-### Genres vs energy (geom_boxplot)
+#### Genres vs energy (geom_boxplot)
 
 ```{r}
 condensed %>%
@@ -292,7 +368,7 @@ condensed %>%
   theme_bw()
 ```
 
-### Genres vs instrumentalness (geom_boxplot)
+#### Genres vs instrumentalness (geom_boxplot)
 
 ```{r}
 condensed %>%
@@ -301,7 +377,7 @@ condensed %>%
   theme_bw()
 ```
 
-### Genres vs liveness (geom_boxplot)
+#### Genres vs liveness (geom_boxplot)
 
 ```{r}
 condensed %>%
@@ -310,7 +386,7 @@ condensed %>%
   theme_bw()
 ```
 
-### Genres vs loudness (geom_boxplot)
+#### Genres vs loudness (geom_boxplot)
 
 ```{r}
 condensed %>%
@@ -319,7 +395,7 @@ condensed %>%
   theme_bw()
 ```
 
-### Genres vs speechiness (geom_boxplot)
+#### Genres vs speechiness (geom_boxplot)
 
 ```{r}
 condensed %>%
@@ -328,7 +404,7 @@ condensed %>%
   theme_bw()
 ```
 
-### Genres vs tempo (geom_boxplot)
+#### Genres vs tempo (geom_boxplot)
 
 ```{r}
 condensed %>%
@@ -337,7 +413,7 @@ condensed %>%
   theme_bw()
 ```
 
-### Genres vs valence (geom_boxplot)
+#### Genres vs valence (geom_boxplot)
 
 ```{r}
 condensed %>%
@@ -346,7 +422,7 @@ condensed %>%
   theme_bw()
 ```
 
-### Genres vs popularity (geom_boxplot)
+#### Genres vs popularity (geom_boxplot)
 
 ```{r}
 condensed %>%
@@ -355,7 +431,7 @@ condensed %>%
   theme_bw()
 ```
 
-### Genres vs tempo (geom_boxplot)
+#### Genres vs tempo (geom_boxplot)
 
 ```{r}
 condensed %>%
@@ -364,10 +440,115 @@ condensed %>%
   theme_bw()
 ```
 
-### Genres vs popularity (geom_boxplot)
+#### Genres vs popularity (geom_boxplot)
+
 ```{r}
 condensed %>%
   ggplot(aes(y = simple_genre, x = popularity, fill = simple_genre)) +
+  geom_boxplot() +
+  theme_bw()
+```
+
+### Density
+
+```{r}
+genres_names <- condensed$simple_genre %>% unique()
+
+feature_names <- colnames(condensed %>% select(-c(genres, simple_genre, key, mode)))
+```
+
+
+```{r all-graphs}
+for (g in genres_names) {
+  for (f in feature_names) {
+    gr <- condensed %>%
+      filter(simple_genre == g) %>%
+      ggplot(aes_string(x = f)) +
+      geom_density() +
+      theme_bw()
+    gr %>% 
+      print()
+  }
+}
+```
+
+
+```{r}
+# for (f in feature_names) {
+#   var = get(condensed, f)
+#   condensed %>%
+#     filter(simple_genre == "classical") %>%
+#     ggplot(aes(x = )) +
+#     geom_density() %>%
+#     print()
+# }
+```
+
+
+```{r}
+# lapply(feature_names, function(f) {
+#   condensed %>%
+#       filter(simple_genre == "classical") %>%
+#       ggplot(aes(x = f)) +
+#       geom_density() %>%
+#       print()
+# })
+
+
+# g <- "classical"
+# f <- "acousticness"
+# 
+# condensed$get(f)
+# 
+# condensed %>%
+#   filter(simple_genre == g) %>%
+#   ggplot(aes(x = f)) +
+#   geom_density() %>%
+#   print()
+```
+
+
+```{r}
+condensed %>% 
+  group_by(simple_genre) %>% 
+  summarise(
+    n = n(),
+    ) %>% 
+  arrange(desc(n))
+
+condensed %>% 
+  filter(simple_genre == "other") %>% 
+  ggplot(aes(x = acousticness)) +
+  geom_density()
+
+condensed %>% 
+  filter(simple_genre == "pop") %>% 
+  ggplot(aes(x = acousticness)) +
+  geom_density()
+
+condensed %>% 
+  filter(simple_genre == "indie") %>% 
+  ggplot(aes(x = acousticness)) +
+  geom_density()
+
+condensed %>% 
+  filter(simple_genre == "rock") %>% 
+  ggplot(aes(x = acousticness)) +
+  geom_density()
+```
+
+
+### Popularity
+
+```{r}
+condensed %>%
+  ggplot(aes(y = simple_genre, x = danceability, fill = simple_genre)) +
+  geom_boxplot() +
+  theme_bw()
+```
+```{r}
+condensed %>%
+  ggplot(aes(y = simple_genre, x = danceability, fill = simple_genre)) +
   geom_boxplot() +
   theme_bw()
 ```
@@ -391,7 +572,9 @@ condensed %>%
 
 
 
-## Feature comparisons
+
+<!--
+## Feature comparisons 
 
 ### Graphs of Combinations of Features {.tabset .tabset-pills}
 
@@ -409,12 +592,18 @@ pairs(year[,c(5, 2, 7, 8)])
 pairs(year[2:12])
 ```
 
+-->
+
 # Discussion
+
+We also discovered which features have the strongest linear correlations to each other, vs which features have no linear relationship. We found that energy has a correlation over the absolute value of 0.9 to three other features, acousticness, loudness and tempo. Acousticness has a negative correlation with energy while loudness and tempo both have positive correlations with energy. Considering that acousticness, loudness, and tempo are all measured based on set measurements, while energy is calculated from intensity and activity in the song, we can infer that acousticness, loudness, and tempo all affect the energy of a song.
 
 A short-coming of our analysis is that we do not know how many songs are included in the data for each year. Some year’s data may be based on more songs than other years. 
 
-Future work on this dataset could involve testing out more of the features relationships and seeing if they have strong models. We could also look for datasets from other music streaming services, such as Apple Music and Pandora.
+Future work on this dataset could involve testing out more of the features relationships and seeing if they have strong models. We could also look for datasets from other music streaming services, such as Apple Music and Pandora. 
 
+
+<!-- 
 # Analysis [DO NOT INCLUDE]
 
 > Your data analysis should include substantial data exploration including graphical and numerical summaries which do not appear in the final report. You may exclude such analysis by using include=FALSE in the corresponding R chunks.
@@ -516,13 +705,94 @@ allr2
 
 allr3 <- allr2
 
+allr4 <- allr2
+
 threshold = 0.8
+b1 <- allr4 < threshold
+b2 <- allr4 > -threshold
+
+allr4[b1 & b2] <- NA # only check values that are above threshold for r
+allr4
+
+threshold = 0.9
 b1 <- allr3 < threshold
 b2 <- allr3 > -threshold
 
 allr3[b1 & b2] <- NA # only check values that are above threshold for r
 allr3
 ```
+
+### r-values {.tabset .tabset-pills}
+
+Just display r-value on graphs:
+
+```{r rename-year-tofit}
+# > install.packages("corrplot")
+library(corrplot)
+
+# year %>% glimpse()
+
+year2 <- year %>% 
+  rename(
+    yr = year,
+    ac = acousticness,
+    db = danceability,
+    dur = duration_ms,
+    en = energy,
+    ins = instrumentalness,
+    li = liveness,
+    lo = loudness,
+    sp = speechiness,
+    tmp = tempo,
+    val = valence,
+    pop = popularity,
+    k = key,
+    m = mode
+  )
+```
+
+#### Upper number
+
+```{r}
+corrplot(
+  round(cor(year2[2:12]), 1),
+  method = "number",
+  type = "upper" # show only upper side
+)
+```
+
+#### Upper color
+
+```{r}
+corrplot(
+  round(cor(year2[2:12]), 1),
+  method = "color",
+  type = "upper" # show only upper side
+)
+```
+
+```{r}
+year %>% 
+  ggplot(aes(x = energy, y = acousticness)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  theme_bw()
+
+year %>% 
+  ggplot(aes(x = energy, y = loudness)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  theme_bw()
+
+year %>% 
+  ggplot(aes(x = energy, y = tempo)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  theme_bw()
+```
+
+
+
 
 ## Displaying all r-values
 
@@ -608,5 +878,6 @@ ggplot(year_data) +
   geom_point(aes(x = energy, y = loudness))
 ```
  
+-->
  
 # References 
