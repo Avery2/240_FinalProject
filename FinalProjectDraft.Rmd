@@ -301,7 +301,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-## Top 20 words in genres (to simplify genre categories)
+## Simplify genre categories
 
 ```{r}
 genre <- read_csv("data/data_by_genres.csv", col_types = cols())
@@ -395,7 +395,7 @@ condensed %>%
   theme_bw()
 ```
 
-## All possible graphs of feature v feature
+## All feature vs. feature
 
 ```{r}
 # for (var_name in colnames(year)[2:12]) {
