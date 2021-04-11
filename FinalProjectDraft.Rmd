@@ -24,7 +24,7 @@ options(dplyr.summarise.inform = FALSE)
 
 Spotify is one of the larger music streaming services available today with 345 million active users^[https://newsroom.spotify.com/company-info/]. Instead of having to buy cds or download every song to listen to, Spotify allows access to millions of songs without having to download them on electronic devices. 
 
-In our project, we want to answer if energy, acousticness, loudness, danceability, and liveness have a specific pattern over the years. In addition, our other question is if a feature has a strong correlation to certain other features. Certain features will have strong patterns relating to the year and some of the features will be strongly correlated to other features. We especially think that energy and danceability will have a strong correlation, along with liveness and energy.
+In our project, we want to answer if energy, acousticness, loudness, danceability, and liveness have a specific pattern relating to the genres. In addition, our other question is if a feature has a strong correlation to certain other features. Certain features will have strong patterns relating to the year and some of the features will be strongly correlated to other features. We especially think that energy and danceability will have a strong correlation, along with liveness and energy.
 
 # Background 
 
@@ -32,7 +32,7 @@ The data we are using is based on Spotify data from 1921 to 2020 including over 
 
 For our project, we decided to focus on energy, acousticness, liveness, loudness and danceability. Energy is a perceptual measure of the intensity and activity of a track on a scale from 0.0 to 1.0. Some of the perceptual features that are included in this are dynamic range, perceived loudness, timbre, onset rate, and general entropy. Liveness ranges from 0 to 1 and detects if an audience is present in a recording. If the liveness value is above 0.8, there is a strong likelihood that the track is live. Acousticness is the confidence measure of the track being acoustic. It varies from 0.0 to 1.0, with 1.0 representing high confidence that the track is acoustic. Loudness ranges from -60 to 0 and is measured in decibels (dB). It suggests the overall loudless averaged over the entire track. Lastly, the measure of danceability includes a combination of tempo,  rhythm stability, beat strength and regularity. It rates how suitable a track is for dancing from 0.0 to 1.0 with 1 being the most danceable.
 
-In the rest of our report, we intend to first graph each feature by year and add a linear regression line to see if there are any trends over the years. Then, we will test the correlations between two features to see if they are strongly related or not related. In the end, we hope to discover how different features have changed over the years and how music has evolved.
+In the rest of our report, we intend to first graph each feature by genre and add a linear regression line to see if there are any trends over the years. Then, we will test the correlations between two features to see if they are strongly related or not related. In the end, we hope to discover how different features have changed over the years and how music has evolved.
 
 # Analysis
 
@@ -55,7 +55,7 @@ genre_term_count <- all_terms %>%
   head(20)
 ```
 
-There was ``r num_genres`` genres. We condensed these into the top 20 occurring terms in these genres using regular expressions and counting the occurrences.
+There were ``r num_genres`` genres. We condensed these into the top 20 occurring terms in these genres using regular expressions and counting the occurrences.
 
 ### All genres
 
@@ -231,7 +231,7 @@ condensed %>%
   geom_col() +
   theme_bw()
 ```
-
+<!--
 ### Genres vs instrumentalness (geom_points)
 
 ```{r}
@@ -239,9 +239,11 @@ condensed %>%
   ggplot(aes(y = simple_genre, x = instrumentalness)) +
   geom_point() +
   theme_bw()
-```
+``` 
+-->
 
-### Genres vs instrumentalness (geom_col)
+<!-- 
+### Genres vs instrumentalness (geom_col) 
 
 ```{r}
 condensed %>%
@@ -252,8 +254,18 @@ condensed %>%
   geom_col() +
   theme_bw()
 ```
+-->
 
-### Genres vs instrumentalness (geom_boxplot)
+### Genres vs acousticness (geom_boxplot)
+
+```{r}
+condensed %>%
+  ggplot(aes(y = simple_genre, x = acousticness, fill = simple_genre)) +
+  geom_boxplot() +
+  theme_bw()
+```
+
+### Genres vs danceability (geom_boxplot)
 
 ```{r}
 condensed %>%
@@ -261,6 +273,123 @@ condensed %>%
   geom_boxplot() +
   theme_bw()
 ```
+
+### Genres vs duration_ms (geom_boxplot)
+
+```{r}
+condensed %>%
+  ggplot(aes(y = simple_genre, x = duration_ms, fill = simple_genre)) +
+  geom_boxplot() +
+  theme_bw()
+```
+
+### Genres vs energy (geom_boxplot)
+
+```{r}
+condensed %>%
+  ggplot(aes(y = simple_genre, x = energy, fill = simple_genre)) +
+  geom_boxplot() +
+  theme_bw()
+```
+
+### Genres vs instrumentalness (geom_boxplot)
+
+```{r}
+condensed %>%
+  ggplot(aes(y = simple_genre, x = instrumentalness, fill = simple_genre)) +
+  geom_boxplot() +
+  theme_bw()
+```
+
+### Genres vs liveness (geom_boxplot)
+
+```{r}
+condensed %>%
+  ggplot(aes(y = simple_genre, x = liveness, fill = simple_genre)) +
+  geom_boxplot() +
+  theme_bw()
+```
+
+### Genres vs loudness (geom_boxplot)
+
+```{r}
+condensed %>%
+  ggplot(aes(y = simple_genre, x = loudness, fill = simple_genre)) +
+  geom_boxplot() +
+  theme_bw()
+```
+
+### Genres vs speechiness (geom_boxplot)
+
+```{r}
+condensed %>%
+  ggplot(aes(y = simple_genre, x = speechiness, fill = simple_genre)) +
+  geom_boxplot() +
+  theme_bw()
+```
+
+### Genres vs tempo (geom_boxplot)
+
+```{r}
+condensed %>%
+  ggplot(aes(y = simple_genre, x = tempo, fill = simple_genre)) +
+  geom_boxplot() +
+  theme_bw()
+```
+
+### Genres vs valence (geom_boxplot)
+
+```{r}
+condensed %>%
+  ggplot(aes(y = simple_genre, x = valence, fill = simple_genre)) +
+  geom_boxplot() +
+  theme_bw()
+```
+
+### Genres vs popularity (geom_boxplot)
+
+```{r}
+condensed %>%
+  ggplot(aes(y = simple_genre, x = popularity, fill = simple_genre)) +
+  geom_boxplot() +
+  theme_bw()
+```
+
+### Genres vs tempo (geom_boxplot)
+
+```{r}
+condensed %>%
+  ggplot(aes(y = simple_genre, x = tempo, fill = simple_genre)) +
+  geom_boxplot() +
+  theme_bw()
+```
+
+### Genres vs popularity (geom_boxplot)
+```{r}
+condensed %>%
+  ggplot(aes(y = simple_genre, x = popularity, fill = simple_genre)) +
+  geom_boxplot() +
+  theme_bw()
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ## Feature comparisons
 
@@ -387,7 +516,7 @@ allr2
 
 allr3 <- allr2
 
-threshold = 0.7
+threshold = 0.8
 b1 <- allr3 < threshold
 b2 <- allr3 > -threshold
 
@@ -454,6 +583,29 @@ corrplot.mixed(
   lower = "number",
   upper = "color"
 )
+```
+ 
+```{r}
+genre_data <- read_csv("data/data_by_genres.csv")
+year_data <- read_csv("data/data_by_year.csv")
+
+ggplot(year_data) +
+  geom_point(aes(x = year, y = acousticness))
+
+ggplot(year_data) +
+  geom_point(aes(x = year, y = danceability))
+
+ggplot(year_data) +
+  geom_point(aes(x = year, y = loudness))
+
+ggplot(year_data) +
+  geom_point(aes(x = year, y = liveness))
+
+ggplot(year_data) +
+  geom_point(aes(x = year, y = energy))
+
+ggplot(year_data) +
+  geom_point(aes(x = energy, y = loudness))
 ```
  
  
