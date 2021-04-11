@@ -317,7 +317,6 @@ genre_term_count <- all_terms %>%
   summarise(n = n()) %>% 
   arrange(desc(n)) %>% 
   head(20)
-genre_term_count
 ```
 
 
@@ -350,49 +349,10 @@ condensed <- genre %>%
     )
   )
 
-condensed %>% 
-  group_by(simple_genre) %>% 
-  summarise(n = n()) %>% 
-  arrange(desc(n))
-```
-
-## Test graphs of condensed genres
-
-```{r}
-condensed %>% 
-  group_by(simple_genre) %>% 
-  summarise(n = n()) %>% 
-  arrange(desc(n)) %>% 
-  ggplot(aes(y = simple_genre, x = n)) +
-  geom_col() +
-  theme_bw()
-
-condensed %>% 
-  group_by(simple_genre) %>% 
-  filter(simple_genre != "other") %>% 
-  summarise(n = n()) %>% 
-  arrange(desc(n)) %>% 
-  ggplot(aes(y = simple_genre, x = n, fill = simple_genre)) +
-  geom_col() +
-  theme_bw()
-
-condensed %>% 
-  ggplot(aes(y = simple_genre, x = instrumentalness)) +
-  geom_point() +
-  theme_bw()
-
-condensed %>%
-  select(simple_genre, instrumentalness) %>% 
-  group_by(simple_genre) %>%
-  summarise(mean_inst = mean(instrumentalness)) %>% 
-  ggplot(aes(y = simple_genre, x = mean_inst)) +
-  geom_col() +
-  theme_bw()
-
-condensed %>%
-  ggplot(aes(y = simple_genre, x = danceability, fill = simple_genre)) +
-  geom_boxplot() +
-  theme_bw()
+# condensed %>% 
+#   group_by(simple_genre) %>% 
+#   summarise(n = n()) %>% 
+#   arrange(desc(n))
 ```
 
 ## All feature vs. feature
@@ -404,20 +364,35 @@ condensed %>%
 #     geom_boxplot() %>%
 #     print()
 # }
-
 ```
 
 ## All r-values
 
-```{r}
+```{r rows.print=11}
 year <- read_csv("data/data_by_year.csv", col_types = cols())
 
 # All r values
-year %>% 
-  select(-c(year, key, mode)) %>% 
-  cor() %>% 
-  round(digits = 2) %>% 
+allr <- year %>%
+  select(-c(year, key, mode)) %>%
+  cor() %>%
+  round(digits = 2) %>%
   data.frame()
+
+library(corrr)
+allr2 <- year %>% 
+  select(-c(year, key, mode)) %>% 
+  correlate()
+
+allr2
+
+allr3 <- allr2
+
+threshold = 0.7
+b1 <- allr3 < threshold
+b2 <- allr3 > -threshold
+
+allr3[b1 & b2] <- NA # only check values that are above threshold for r
+allr3
 ```
 
 ## Displaying all r-values
@@ -445,19 +420,18 @@ year %>%
 
 # https://statsandr.com/blog/correlation-coefficient-and-correlation-test-in-r/
 
+# only some
 pairs(year[,c(5, 2, 7, 8)])
-pairs(year[2:12])
 
-# combn(colnames(year)[2:12], 2)
+# all
+pairs(year[2:12])
 ```
 
 ```{r}
 # > install.packages("corrplot")
 library(corrplot)
 
-# year %>% glimpse()
-
-year <- year %>% 
+year_sh <- year %>% 
   rename(
     yr = year,
     ac = acousticness,
@@ -474,31 +448,11 @@ year <- year %>%
     k = key,
     m = mode
   )
-```
-
-
-```{r}
-corrplot(
-  round(cor(year[2:12]), 1),
-  method = "number",
-  type = "upper" # show only upper side
-)
-
-corrplot(
-  round(cor(year[2:12]), 1),
-  method = "color",
-  type = "upper" # show only upper side
-)
 
 corrplot.mixed(
-  round(cor(year[2:12]), 1),
+  round(cor(year_sh[2:12]), 1),
   lower = "number",
   upper = "color"
-)
-
-corrplot(cor(year[,c(5, 2, 7, 8)]),
-  method = "number",
-  type = "upper" # show only upper side
 )
 ```
  
