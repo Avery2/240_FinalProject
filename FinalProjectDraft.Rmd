@@ -231,7 +231,7 @@ corrplot.mixed(
 
 #### Filter r values {.tabset .tabset-pills}
 
-As this table shows, some features seem to have strong linear relationships, while some features seem to not have a strong linear relationship. Next, we filtered for the absolute value of r-values only over `.9` to find the strongest feature relations. You can see some other thresholds below. We chose `.9` as a threshold arbitrarily since there were many features that correlated.
+As this table shows, some features seem to have strong linear relationships, while some features seem to not have a strong linear relationship. Next, we filtered for the absolute value of r-values only over `.9` to find the strongest feature relations. You can see some other thresholds below. We chose `.9` as a threshold arbitrarily since there were many features that correlated. Below are different thresholds.
 
 ##### threshold = `0.9`
 
@@ -286,7 +286,7 @@ corrplot(
 )
 ```
 
-##### threshold = `0.8`
+##### `0.8`
 
 ```{r}
 allr <- year2 %>%
@@ -308,7 +308,7 @@ corrplot(
 )
 ```
 
-##### threshold = `0.7`
+##### `0.7`
 
 ```{r}
 allr <- year2 %>%
@@ -330,7 +330,7 @@ corrplot(
 )
 ```
 
-##### threshold = `0.6`
+##### `0.6`
 
 ```{r}
 allr <- year2 %>%
@@ -338,6 +338,29 @@ allr <- year2 %>%
   cor() %>%
   data.frame()
 threshold = 0.6
+b1 <- allr < threshold
+b2 <- allr > -threshold
+allr[allr == 1] <- NA
+allr[b1 & b2] <- NA
+
+corrplot(
+  is.corr = FALSE,
+  corr = as.matrix(allr),
+  type = "upper",
+  upper = "number",
+  na.label = "?"
+)
+```
+
+
+##### `none`
+
+```{r}
+allr <- year2 %>%
+  select(-c(yr, k, m)) %>%
+  cor() %>%
+  data.frame()
+threshold = 0
 b1 <- allr < threshold
 b2 <- allr > -threshold
 allr[allr == 1] <- NA
@@ -414,7 +437,7 @@ pairs(year[,c(5, 2, 8, 10)])
 correlate(year[,c(5, 2, 8, 10)])
 ```
 
-## Genre Graphs
+## Genre Analysis
 <!--
 ### Genres vs instrumentalness (geom_points)
 
@@ -545,7 +568,7 @@ condensed %>%
 
 ### Density Plots {.tabset .tabset-pill}
 
-Look. Density plots.
+Density plots. These are messy so in the next secion we will try to make sense of them.
 
 ```{r}
 genres_names <- condensed$simple_genre %>% unique()
@@ -1211,19 +1234,16 @@ Isolate genres that didn't have `p-value < 0.5` and therefore cannot be dismisse
 arr2[18] %>% filter(is.na(rap))
 ```
 
+Does this make sense? (Context)
 
+Kinda. The mean popularizes seem the same.
 
-
-
-
-
-
-
-
-
-
-
-
+```{r}
+same_as_rap <- arr2[18] %>% filter(is.na(rap)) %>% row.names()
+foo %>% 
+  filter(simple_genre %in% same_as_rap) %>% 
+  select(simple_genre, n, m_po, sd_po)
+```
 
 
 
