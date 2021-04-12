@@ -302,7 +302,11 @@ b1 <- allr < threshold
 b2 <- allr > -threshold
 allr[allr == 1] <- NA
 allr[b1 & b2] <- NA
+```
 
+There are ``r sum(apply(allr, 2, function(x) length(which(!is.na(x))))) / 2`` r-values above this threshold.
+
+```{r rows.print=11}
 corrplot(
   is.corr = FALSE,
   corr = as.matrix(allr),
@@ -312,7 +316,6 @@ corrplot(
 )
 ```
 
-There are ``r sum(apply(allr, 2, function(x) length(which(!is.na(x))))) / 2`` r-values above this threshold.
 
 ##### `0.8`
 
@@ -326,7 +329,11 @@ b1 <- allr < threshold
 b2 <- allr > -threshold
 allr[allr == 1] <- NA
 allr[b1 & b2] <- NA
+```
 
+There are ``r sum(apply(allr, 2, function(x) length(which(!is.na(x))))) / 2`` r-values above this threshold.
+
+```{r}
 corrplot(
   is.corr = FALSE,
   corr = as.matrix(allr),
@@ -336,7 +343,7 @@ corrplot(
 )
 ```
 
-There are ``r sum(apply(allr, 2, function(x) length(which(!is.na(x))))) / 2`` r-values above this threshold.
+
 
 ##### `0.7`
 
@@ -350,7 +357,11 @@ b1 <- allr < threshold
 b2 <- allr > -threshold
 allr[allr == 1] <- NA
 allr[b1 & b2] <- NA
+```
 
+There are ``r sum(apply(allr, 2, function(x) length(which(!is.na(x))))) / 2`` r-values above this threshold.
+
+```{r}
 corrplot(
   is.corr = FALSE,
   corr = as.matrix(allr),
@@ -360,7 +371,6 @@ corrplot(
 )
 ```
 
-There are ``r sum(apply(allr, 2, function(x) length(which(!is.na(x))))) / 2`` r-values above this threshold.
 
 ##### `0.6`
 
@@ -374,7 +384,11 @@ b1 <- allr < threshold
 b2 <- allr > -threshold
 allr[allr == 1] <- NA
 allr[b1 & b2] <- NA
+```
 
+There are ``r sum(apply(allr, 2, function(x) length(which(!is.na(x))))) / 2`` r-values above this threshold.
+
+```{r}
 corrplot(
   is.corr = FALSE,
   corr = as.matrix(allr),
@@ -383,8 +397,6 @@ corrplot(
   na.label = "?"
 )
 ```
-
-There are ``r sum(apply(allr, 2, function(x) length(which(!is.na(x))))) / 2`` r-values above this threshold.
 
 ##### `none`
 
@@ -398,7 +410,11 @@ b1 <- allr < threshold
 b2 <- allr > -threshold
 allr[allr == 1] <- NA
 allr[b1 & b2] <- NA
+```
 
+There are ``r sum(apply(allr, 2, function(x) length(which(!is.na(x))))) / 2`` r-values above this threshold.
+
+```{r}
 corrplot(
   is.corr = FALSE,
   corr = as.matrix(allr),
@@ -407,8 +423,6 @@ corrplot(
   na.label = "?"
 )
 ```
-
-There are ``r sum(apply(allr, 2, function(x) length(which(!is.na(x))))) / 2`` r-values above this threshold.
 
 ### Top correlated features {.tabset .tabset-pills}
 
@@ -622,6 +636,7 @@ genres_names <- condensed$simple_genre %>% unique()
 feature_names <- colnames(condensed %>% select(-c(genres, simple_genre, key, mode)))
 ```
 
+
 #### popularity
 
 ```{r}
@@ -763,7 +778,7 @@ $$
 t = \frac{m_a - m_b}{\sqrt{\frac{s_a^2}{n_a}+\frac{s_b^2}{n_b}}}
 $$
 
-We use this test statistic to calculate the p-value by finding the corresponding quantile from the student t distribution with $\max(n_a, n_b)-1$ degrees of freedom. We do this test between every combination of genres for all features:
+We use this test statistic to calculate the p-value by finding the corresponding quantile from the student t distribution with $\max(n_a, n_b)-1$ degrees of freedom. While we will focus on analyzing popularity in particular in the next section, we do this test between every combination of genres for all features:
 
 ```{r}
 # setup
@@ -797,6 +812,43 @@ foo <- condensed %>%
     sd_po = sd(popularity),
   )
 ```
+
+```{r}
+# foo %>% 
+#   ggplot(aes(x = m_ac)) +
+#   geom_density()
+# foo %>% 
+#   ggplot(aes(x = m_da)) +
+#   geom_density()
+# foo %>% 
+#   ggplot(aes(x = m_du)) +
+#   geom_density()
+# foo %>% 
+#   ggplot(aes(x = m_en)) +
+#   geom_density()
+# foo %>% 
+#   ggplot(aes(x = m_in)) +
+#   geom_density()
+# foo %>% 
+#   ggplot(aes(x = m_li)) +
+#   geom_density()
+# foo %>% 
+#   ggplot(aes(x = m_lo)) +
+#   geom_density()
+# foo %>% 
+#   ggplot(aes(x = m_sp)) +
+#   geom_density()
+# foo %>% 
+#   ggplot(aes(x = m_te)) +
+#   geom_density()
+# foo %>% 
+#   ggplot(aes(x = m_va)) +
+#   geom_density()
+# foo %>% 
+#   ggplot(aes(x = m_po)) +
+#   geom_density()
+```
+
 
 #### acousticness
 
@@ -1168,6 +1220,18 @@ condensed %>%
   theme_bw()
 ```
 
+Additionally, we made a density plot of our estimator, the mean popularity, to check that it looks normally distributed. We did this so we know using a t-test is appropriate. As you can see, the plot seem normally distributed so a t-test is appropriate.
+
+```{r}
+foo %>%
+  ggplot(aes(x = m_po)) +
+  geom_density() +
+  ylab("Density") +
+  xlab("Mean Popularity") +
+  theme_bw()
+```
+
+
 We found the most popular by finding the genre with the highest mean popularity. Here you can see the genre with the highest mean popularity was `rap`.
 
 ```{r}
@@ -1242,8 +1306,8 @@ foo %>%
   geom_col() +
   xlab("Genre") +
   guides(fill = guide_legend(title = "Genre")) +
-  ylab("Mean Popularity")
-
+  ylab("Mean Popularity") + 
+  theme_bw()
 ```
 
 
