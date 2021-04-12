@@ -22,9 +22,9 @@ options(dplyr.summarise.inform = FALSE)
 
 # Introduction
 
-Spotify is one of the larger music streaming services available today with 345 million active users^[https://newsroom.spotify.com/company-info/]. Instead of having to buy cds or download every song to listen to, Spotify allows access to millions of songs without having to download them on electronic devices. 
+Spotify is one of the larger music streaming services available today with 345 million active users ^[https://newsroom.spotify.com/company-info/]. Instead of having to buy cds or download every song to listen to, Spotify allows access to millions of songs without having to download them on electronic devices.
 
-In our project, we want to answer if energy, acousticness, loudness, danceability, and liveness have a specific pattern relating to the genres. In addition, our other question is if a feature has a strong correlation to certain other features. Certain features will have strong patterns relating to the year and some of the features will be strongly correlated to other features. We especially think that energy and danceability will have a strong correlation, along with liveness and energy.
+In our project, we want to discover the most popular genre. In addition, our other question is if a feature has a strong correlation to certain other features. Our data will specify a few genres that may be the most popular. Certain features will be strongly correlated to other features. 
 
 # Background 
 
@@ -32,7 +32,7 @@ The data we are using is based on Spotify data from 1921 to 2020 including over 
 
 Energy is a perceptual measure of the intensity and activity of a track on a scale from 0.0 to 1.0. Some of the perceptual features that are included in this are dynamic range, perceived loudness, timbre, onset rate, and general entropy. Liveness ranges from 0 to 1 and detects if an audience is present in a recording. If the liveness value is above 0.8, there is a strong likelihood that the track is live. Acousticness is the confidence measure of the track being acoustic. It varies from 0.0 to 1.0, with 1.0 representing high confidence that the track is acoustic. Loudness ranges from -60 to 0 and is measured in decibels (dB). It suggests the overall loudless averaged over the entire track. The measure of danceability includes a combination of tempo,  rhythm stability, beat strength and regularity. It rates how suitable a track is for dancing from 0.0 to 1.0 with 1 being the most danceable. Duration measures the length of the track in milliseconds (ms). The instrumentalness feature tracks whether a song contains vocals. “Ooh” and “aah” sounds are treated as instrumental in this context. Rap or spoken word tracks are considered vocal. Instrumentalness ranges from 0 to 1.0 with 1.0 being the most instrumental. Speechiness is the opposite of instrumentalness, measuring the relative length of the track containing any kind of human voice. The tempo feature gives information on the tempo of the track in Beat Per Minute (BPM). Valence measures the positiveness of the track, higher valence relates to more cheerful and upbeat songs. Lastly, popularity is calculated by an algorithm that is based on the total number of plays the track has had and how recent those plays are. 
 
-In the rest of our report, we intend to first group the genres into broader categories and then analyze the features throughout the genres. We want to discover which genres are the most popular and if the danceability of genres differs significantly. We will compare features to each other and test the correlations between two features to see if they have a strong linear relationship or not. In the end, we hope to discover how different genres are related to different features of music, as well and how different features relate to each other.
+In the rest of our report, we intend to first group the genres into broader categories and then analyze the features throughout the genres. We want to discover which genres are the most popular by using t-tests comparing the genre popularity means. We will also compare features to each other and test the correlations between two features to see if they have a strong linear relationship or not. In the end, we hope to discover how popularity is related to different genres, as well and how different features relate to each other.
 
 # Analysis
 
@@ -442,8 +442,6 @@ condensed %>%
 
 ### Explaination
 
-WOrds
-
 ### Boxplots {.tabset .tabset-pills}
 
 #### Acousticness
@@ -553,7 +551,7 @@ genres_names <- condensed$simple_genre %>% unique()
 feature_names <- colnames(condensed %>% select(-c(genres, simple_genre, key, mode)))
 ```
 
-#### random testing
+<!-- #### random testing -->
 
 ```{r}
 # condensed %>% 
@@ -563,10 +561,10 @@ feature_names <- colnames(condensed %>% select(-c(genres, simple_genre, key, mod
 #     ) %>% 
 #   arrange(desc(n))
 
-condensed %>% 
-  filter(simple_genre == "other") %>% 
-  ggplot(aes(x = acousticness)) +
-  geom_density()
+# condensed %>% 
+#   filter(simple_genre == "other") %>% 
+#   ggplot(aes(x = acousticness)) +
+#   geom_density()
 
 # condensed %>% 
 #   filter(simple_genre == "pop") %>% 
@@ -584,7 +582,12 @@ condensed %>%
 #   geom_density()
 ```
 
-#### ALL GRAPHS
+```{r}
+
+# colnames(condensed %>% select(-c(genres, key, mode, simple_genre)))
+# acousticness danceability duration_ms energy instrumentalness liveness loudness speechiness tempo valence popularity  
+# "acousticness" "danceability" "duration_ms" "energy" "instrumentalness" "liveness" "loudness" "speechiness" "tempo" "valence" "popularity"
+```
 
 ```{r all-graphs}
 # for (g in genres_names) {
@@ -602,30 +605,591 @@ condensed %>%
 #   }
 # }
 
-for (f in feature_names) {
-  gr <- condensed %>%
-    ggplot(aes_string(x = f, color = quote(simple_genre))) +
-    geom_density() +
-    ggtitle(label = str_c(f)) +
-    theme_bw()
-  gr %>%
-    print()
+# Generate with for loop
+
+# for (f in feature_names) {
+#   gr <- condensed %>%
+#     ggplot(aes_string(x = f, color = quote(simple_genre))) +
+#     geom_density() +
+#     ggtitle(label = str_c(f)) +
+#     theme_bw()
+#   gr %>%
+#     print()
+# }
+
+# colnames(condensed %>% select(-c(genres, key, mode, simple_genre)))
+```
+
+#### acousticness
+
+```{r}
+condensed %>%
+  ggplot(aes(x = acousticness, color = simple_genre)) +
+  geom_density() +
+  ggtitle(label = "acousticness") +
+  theme_bw()
+```
+
+#### danceability
+
+```{r}
+condensed %>%
+  ggplot(aes(x = danceability, color = simple_genre)) +
+  geom_density() +
+  ggtitle(label = "danceability") +
+  theme_bw()
+```
+
+#### duration_ms
+
+```{r}
+condensed %>%
+  ggplot(aes(x = duration_ms, color = simple_genre)) +
+  geom_density() +
+  ggtitle(label = "duration_ms") +
+  theme_bw()
+```
+
+#### energy
+
+```{r}
+condensed %>%
+  ggplot(aes(x = energy, color = simple_genre)) +
+  geom_density() +
+  ggtitle(label = "energy") +
+  theme_bw()
+```
+
+#### instrumentalness
+
+```{r}
+condensed %>%
+  ggplot(aes(x = instrumentalness, color = simple_genre)) +
+  geom_density() +
+  ggtitle(label = "instrumentalness") +
+  theme_bw()
+```
+
+#### liveness
+
+```{r}
+condensed %>%
+  ggplot(aes(x = liveness, color = simple_genre)) +
+  geom_density() +
+  ggtitle(label = "liveness") +
+  theme_bw()
+```
+
+#### loudness
+
+```{r}
+condensed %>%
+  ggplot(aes(x = loudness, color = simple_genre)) +
+  geom_density() +
+  ggtitle(label = "loudness") +
+  theme_bw()
+```
+
+#### speechiness
+
+```{r}
+condensed %>%
+  ggplot(aes(x = speechiness, color = simple_genre)) +
+  geom_density() +
+  ggtitle(label = "speechiness") +
+  theme_bw()
+```
+
+#### tempo
+
+```{r}
+condensed %>%
+  ggplot(aes(x = tempo, color = simple_genre)) +
+  geom_density() +
+  ggtitle(label = "tempo") +
+  theme_bw()
+```
+
+#### valence
+
+```{r}
+condensed %>%
+  ggplot(aes(x = valence, color = simple_genre)) +
+  geom_density() +
+  ggtitle(label = "valence") +
+  theme_bw()
+```
+
+#### popularity
+
+```{r}
+condensed %>%
+  ggplot(aes(x = popularity, color = simple_genre)) +
+  geom_density() +
+  ggtitle(label = "popularity") +
+  theme_bw()
+```
+
+### t-tests {.tabset .tabset-pills}
+
+```{r}
+# setup
+foo <- condensed %>% 
+  group_by(simple_genre) %>% 
+  summarise(
+    n = n(),
+    # 
+    m_ac = mean(acousticness),
+    m_da = mean(danceability),
+    m_du = mean(duration_ms),
+    m_en = mean(energy),
+    m_in = mean(instrumentalness),
+    m_li = mean(liveness),
+    m_lo = mean(loudness),
+    m_sp = mean(speechiness),
+    m_te = mean(tempo),
+    m_va = mean(valence),
+    m_po = mean(popularity),
+    # 
+    sd_ac = sd(acousticness),
+    sd_da = sd(danceability),
+    sd_du = sd(duration_ms),
+    sd_en = sd(energy),
+    sd_in = sd(instrumentalness),
+    sd_li = sd(liveness),
+    sd_lo = sd(loudness),
+    sd_sp = sd(speechiness),
+    sd_te = sd(tempo),
+    sd_va = sd(valence),
+    sd_po = sd(popularity),
+  )
+
+t_test = function(mean1, sd1, total1, mean2, sd2, total2)
+{
+  z = (mean1 - mean2) / sqrt((sd1 * sd1 / total1) + (sd2 * sd2 / total2))
+  if (total1 > total2) {
+    df = total2 - 1
+  }
+  else {
+    df = total1 - 1
+  }
+  
+  p_val = pt(z, df)
+  return (p_val)
 }
 ```
 
-### Popularity
+#### acousticness
+
+All t-test between genres for acousticness.
 
 ```{r}
-condensed %>%
-  ggplot(aes(y = simple_genre, x = danceability, fill = simple_genre)) +
-  geom_boxplot() +
-  theme_bw()
+arr <- array(numeric(),
+              dim = c(21, 21),
+              dimnames = c(foo[, "simple_genre"], foo[, "simple_genre"])) %>% 
+    as.data.frame()
+
+for (i in seq(21)) {
+  for (j in seq(21)) {
+    t <-
+      t_test(foo$m_ac[i],
+             foo$sd_ac[i],
+             foo$n[i],
+             foo$m_ac[j],
+             foo$sd_ac[j],
+             foo$n[j])
+    # t %>% print()
+    arr[i, j] <- round(t, 4)
+  }
+}
+
+arr
+
+# Filter
+arr2 <- arr
+arr2[arr2 > 0.05] <- NA
+arr2
 ```
+
+#### danceability
+
+All t-test between genres for danceability.
+
 ```{r}
-condensed %>%
-  ggplot(aes(y = simple_genre, x = danceability, fill = simple_genre)) +
-  geom_boxplot() +
-  theme_bw()
+arr <- array(numeric(),
+              dim = c(21, 21),
+              dimnames = c(foo[, "simple_genre"], foo[, "simple_genre"])) %>% 
+    as.data.frame()
+
+for (i in seq(21)) {
+  for (j in seq(21)) {
+    t <-
+      t_test(foo$m_da[i],
+             foo$sd_da[i],
+             foo$n[i],
+             foo$m_da[j],
+             foo$sd_da[j],
+             foo$n[j])
+    # t %>% print()
+    arr[i, j] <- round(t, 4)
+  }
+}
+
+arr
+
+# Filter
+arr2 <- arr
+arr2[arr2 > 0.05] <- NA
+arr2
+```
+
+#### duration_ms
+
+All t-test between genres for duration_ms.
+
+```{r}
+arr <- array(numeric(),
+              dim = c(21, 21),
+              dimnames = c(foo[, "simple_genre"], foo[, "simple_genre"])) %>% 
+    as.data.frame()
+
+for (i in seq(21)) {
+  for (j in seq(21)) {
+    t <-
+      t_test(foo$m_du[i],
+             foo$sd_du[i],
+             foo$n[i],
+             foo$m_du[j],
+             foo$sd_du[j],
+             foo$n[j])
+    # t %>% print()
+    arr[i, j] <- round(t, 4)
+  }
+}
+
+arr
+
+# Filter
+arr2 <- arr
+arr2[arr2 > 0.05] <- NA
+arr2
+```
+
+#### energy
+
+All t-test between genres for energy.
+
+```{r}
+arr <- array(numeric(),
+              dim = c(21, 21),
+              dimnames = c(foo[, "simple_genre"], foo[, "simple_genre"])) %>% 
+    as.data.frame()
+
+for (i in seq(21)) {
+  for (j in seq(21)) {
+    t <-
+      t_test(foo$m_en[i],
+             foo$sd_en[i],
+             foo$n[i],
+             foo$m_en[j],
+             foo$sd_en[j],
+             foo$n[j])
+    # t %>% print()
+    arr[i, j] <- round(t, 4)
+  }
+}
+
+arr
+
+# Filter
+arr2 <- arr
+arr2[arr2 > 0.05] <- NA
+arr2
+```
+
+#### instrumentalness
+
+All t-test between genres for instrumentalness.
+
+```{r}
+arr <- array(numeric(),
+              dim = c(21, 21),
+              dimnames = c(foo[, "simple_genre"], foo[, "simple_genre"])) %>% 
+    as.data.frame()
+
+for (i in seq(21)) {
+  for (j in seq(21)) {
+    t <-
+      t_test(foo$m_in[i],
+             foo$sd_in[i],
+             foo$n[i],
+             foo$m_in[j],
+             foo$sd_in[j],
+             foo$n[j])
+    # t %>% print()
+    arr[i, j] <- round(t, 4)
+  }
+}
+
+arr
+
+# Filter
+arr2 <- arr
+arr2[arr2 > 0.05] <- NA
+arr2
+```
+
+#### liveness
+
+All t-test between genres for liveness.
+
+```{r}
+arr <- array(numeric(),
+              dim = c(21, 21),
+              dimnames = c(foo[, "simple_genre"], foo[, "simple_genre"])) %>% 
+    as.data.frame()
+
+for (i in seq(21)) {
+  for (j in seq(21)) {
+    t <-
+      t_test(foo$m_li[i],
+             foo$sd_li[i],
+             foo$n[i],
+             foo$m_li[j],
+             foo$sd_li[j],
+             foo$n[j])
+    # t %>% print()
+    arr[i, j] <- round(t, 4)
+  }
+}
+
+arr
+
+# Filter
+arr2 <- arr
+arr2[arr2 > 0.05] <- NA
+arr2
+```
+
+#### loudness
+
+All t-test between genres for loudness.
+
+```{r}
+arr <- array(numeric(),
+              dim = c(21, 21),
+              dimnames = c(foo[, "simple_genre"], foo[, "simple_genre"])) %>% 
+    as.data.frame()
+
+for (i in seq(21)) {
+  for (j in seq(21)) {
+    t <-
+      t_test(foo$m_lo[i],
+             foo$sd_lo[i],
+             foo$n[i],
+             foo$m_lo[j],
+             foo$sd_lo[j],
+             foo$n[j])
+    # t %>% print()
+    arr[i, j] <- round(t, 4)
+  }
+}
+
+arr
+
+# Filter
+arr2 <- arr
+arr2[arr2 > 0.05] <- NA
+arr2
+```
+
+#### speechiness
+
+All t-test between genres for speechiness.
+
+```{r}
+arr <- array(numeric(),
+              dim = c(21, 21),
+              dimnames = c(foo[, "simple_genre"], foo[, "simple_genre"])) %>% 
+    as.data.frame()
+
+for (i in seq(21)) {
+  for (j in seq(21)) {
+    t <-
+      t_test(foo$m_sp[i],
+             foo$sd_sp[i],
+             foo$n[i],
+             foo$m_sp[j],
+             foo$sd_sp[j],
+             foo$n[j])
+    # t %>% print()
+    arr[i, j] <- round(t, 4)
+  }
+}
+
+arr
+
+# Filter
+arr2 <- arr
+arr2[arr2 > 0.05] <- NA
+arr2
+```
+
+#### tempo
+
+All t-test between genres for tempo.
+
+```{r}
+arr <- array(numeric(),
+              dim = c(21, 21),
+              dimnames = c(foo[, "simple_genre"], foo[, "simple_genre"])) %>% 
+    as.data.frame()
+
+for (i in seq(21)) {
+  for (j in seq(21)) {
+    t <-
+      t_test(foo$m_te[i],
+             foo$sd_te[i],
+             foo$n[i],
+             foo$m_te[j],
+             foo$sd_te[j],
+             foo$n[j])
+    # t %>% print()
+    arr[i, j] <- round(t, 4)
+  }
+}
+
+arr
+
+# Filter
+arr2 <- arr
+arr2[arr2 > 0.05] <- NA
+arr2
+```
+
+#### valence
+
+All t-test between genres for valence.
+
+```{r}
+arr <- array(numeric(),
+              dim = c(21, 21),
+              dimnames = c(foo[, "simple_genre"], foo[, "simple_genre"])) %>% 
+    as.data.frame()
+
+for (i in seq(21)) {
+  for (j in seq(21)) {
+    t <-
+      t_test(foo$m_va[i],
+             foo$sd_va[i],
+             foo$n[i],
+             foo$m_va[j],
+             foo$sd_va[j],
+             foo$n[j])
+    # t %>% print()
+    arr[i, j] <- round(t, 4)
+  }
+}
+
+arr
+
+# Filter
+arr2 <- arr
+arr2[arr2 > 0.05] <- NA
+arr2
+```
+
+#### popularity
+
+All t-test between genres for popularity.
+
+```{r}
+arr <- array(numeric(),
+              dim = c(21, 21),
+              dimnames = c(foo[, "simple_genre"], foo[, "simple_genre"])) %>% 
+    as.data.frame()
+
+for (i in seq(21)) {
+  for (j in seq(21)) {
+    t <-
+      t_test(foo$m_po[i],
+             foo$sd_po[i],
+             foo$n[i],
+             foo$m_po[j],
+             foo$sd_po[j],
+             foo$n[j])
+    # t %>% print()
+    arr[i, j] <- round(t, 4)
+  }
+}
+
+arr
+```
+
+Filtered for only significant differences (`p-value < 0.5`).
+
+```{r}
+# Filter
+arr2 <- arr
+arr2[arr2 > 0.05] <- NA
+arr2
+```
+
+
+### Popularity
+
+Find most popular
+
+```{r}
+foo %>% 
+  select(simple_genre, n, m_po, everything()) %>% 
+  arrange(desc(m_po))
+```
+
+t-test for popularity (again)
+
+```{r}
+arr <- array(numeric(),
+              dim = c(21, 21),
+              dimnames = c(foo[, "simple_genre"], foo[, "simple_genre"])) %>% 
+    as.data.frame()
+
+for (i in seq(21)) {
+  for (j in seq(21)) {
+    t <-
+      t_test(foo$m_po[i],
+             foo$sd_po[i],
+             foo$n[i],
+             foo$m_po[j],
+             foo$sd_po[j],
+             foo$n[j])
+    # t %>% print()
+    arr[i, j] <- round(t, 4)
+  }
+}
+
+arr
+```
+
+Isolate most popular
+
+```{r}
+# Filter
+arr2 <- arr
+arr2[arr2 > 0.05] <- NA
+arr2
+```
+
+Only look at the most popular music (rap).
+
+```{r}
+arr2[18]
+```
+
+Isolate genres that didn't have `p-value < 0.5` and therefore cannot be dismissed as not also as popular as rap.
+
+```{r}
+arr2[18] %>% filter(is.na(rap))
 ```
 
 
