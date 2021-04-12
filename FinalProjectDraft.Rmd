@@ -28,7 +28,7 @@ In our project, we want to answer if energy, acousticness, loudness, danceabilit
 
 # Background 
 
-The data we are using is based on Spotify data from 1921 to 2020 including over 175,000 audio tracks. We found our data on Kaggle^[https://www.kaggle.com/yamaerenay/spotify-dataset-19212020-160k-tracks?select=data_by_artist_o.csv]. This dataset groups the data by artist, genre, and year. There are nine different variables measured in the dataset. They are acousticness, danceability, duration, energy, liveness, instrumentalness, loudness, speechiness and tempo. 
+The data we are using is based on Spotify data from 1921 to 2020 including over 175,000 audio tracks.We found our data on Kaggle ^[https://www.kaggle.com/yamaerenay/spotify-dataset-19212020-160k-tracks?select=data_by_artist_o.csv]. This dataset groups the data by artist, genre, and year. There are nine different variables measured in the dataset. They are acousticness, danceability, duration, energy, liveness, instrumentalness, loudness, speechiness, valence, popularity, and tempo.
 
 Energy is a perceptual measure of the intensity and activity of a track on a scale from 0.0 to 1.0. Some of the perceptual features that are included in this are dynamic range, perceived loudness, timbre, onset rate, and general entropy. Liveness ranges from 0 to 1 and detects if an audience is present in a recording. If the liveness value is above 0.8, there is a strong likelihood that the track is live. Acousticness is the confidence measure of the track being acoustic. It varies from 0.0 to 1.0, with 1.0 representing high confidence that the track is acoustic. Loudness ranges from -60 to 0 and is measured in decibels (dB). It suggests the overall loudless averaged over the entire track. The measure of danceability includes a combination of tempo,  rhythm stability, beat strength and regularity. It rates how suitable a track is for dancing from 0.0 to 1.0 with 1 being the most danceable. Duration measures the length of the track in milliseconds (ms). The instrumentalness feature tracks whether a song contains vocals. “Ooh” and “aah” sounds are treated as instrumental in this context. Rap or spoken word tracks are considered vocal. Instrumentalness ranges from 0 to 1.0 with 1.0 being the most instrumental. Speechiness is the opposite of instrumentalness, measuring the relative length of the track containing any kind of human voice. The tempo feature gives information on the tempo of the track in Beat Per Minute (BPM). Valence measures the positiveness of the track, higher valence relates to more cheerful and upbeat songs. Lastly, popularity is calculated by an algorithm that is based on the total number of plays the track has had and how recent those plays are. 
 
@@ -231,9 +231,9 @@ corrplot.mixed(
 
 #### Filter r values {.tabset .tabset-pills}
 
-As this table shows, some features seem to have strong linear relationships, while some features seem to not have a strong linear relationship. Next, we filtered for the absolute value of r-values only over .9 to find the strongest feature relations. 
+As this table shows, some features seem to have strong linear relationships, while some features seem to not have a strong linear relationship. Next, we filtered for the absolute value of r-values only over `.9` to find the strongest feature relations. You can see some other thresholds below. We chose `.9` as a threshold arbitrarily since there were many features that correlated.
 
-##### threshold = 0.9
+##### threshold = `0.9`
 
 ```{r rows.print=11}
 year <- read_csv("data/data_by_year.csv", col_types = cols())
@@ -286,7 +286,7 @@ corrplot(
 )
 ```
 
-##### threshold = 0.8
+##### threshold = `0.8`
 
 ```{r}
 allr <- year2 %>%
@@ -308,7 +308,7 @@ corrplot(
 )
 ```
 
-##### threshold = 0.7
+##### threshold = `0.7`
 
 ```{r}
 allr <- year2 %>%
@@ -330,7 +330,7 @@ corrplot(
 )
 ```
 
-##### threshold = 0.6
+##### threshold = `0.6`
 
 ```{r}
 allr <- year2 %>%
@@ -587,19 +587,29 @@ condensed %>%
 #### ALL GRAPHS
 
 ```{r all-graphs}
-for (g in genres_names) {
-  for (f in feature_names) {
-    gr <- condensed %>%
-      filter(simple_genre == g) %>%
-      ggplot(aes_string(x = f)) +
-      geom_density() +
-      ggtitle(
-        label = str_c(g, " ", f)
-      ) +
-      theme_bw()
-    gr %>%
-      print()
-  }
+# for (g in genres_names) {
+#   for (f in feature_names) {
+#     gr <- condensed %>%
+#       filter(simple_genre == g) %>%
+#       ggplot(aes_string(x = f)) +
+#       geom_density() +
+#       ggtitle(
+#         label = str_c(g, " ", f)
+#       ) +
+#       theme_bw()
+#     gr %>%
+#       print()
+#   }
+# }
+
+for (f in feature_names) {
+  gr <- condensed %>%
+    ggplot(aes_string(x = f, color = quote(simple_genre))) +
+    geom_density() +
+    ggtitle(label = str_c(f)) +
+    theme_bw()
+  gr %>%
+    print()
 }
 ```
 
