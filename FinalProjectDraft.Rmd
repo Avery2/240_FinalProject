@@ -28,7 +28,7 @@ In our project, we want to discover the most popular genre. In addition, our oth
 
 # Background 
 
-The data we are using is based on Spotify data from 1921 to 2020 including over 175,000 audio tracks.We found our data on Kaggle ^[https://www.kaggle.com/yamaerenay/spotify-dataset-19212020-160k-tracks?select=data_by_artist_o.csv]. This dataset groups the data by artist, genre, and year. There are nine different variables measured in the dataset. They are acousticness, danceability, duration, energy, liveness, instrumentalness, loudness, speechiness, valence, popularity, and tempo.
+The data we are using is based on Spotify data from 1921 to 2020 including over 175,000 audio tracks. We found our data on Kaggle ^[https://www.kaggle.com/yamaerenay/spotify-dataset-19212020-160k-tracks?select=data_by_artist_o.csv]. This dataset groups the data by artist, genre, and year. There are nine different variables measured in the dataset. They are acousticness, danceability, duration, energy, liveness, instrumentalness, loudness, speechiness, valence, popularity, and tempo.
 
 Energy is a perceptual measure of the intensity and activity of a track on a scale from 0.0 to 1.0. Some of the perceptual features that are included in this are dynamic range, perceived loudness, timbre, onset rate, and general entropy. Liveness ranges from 0 to 1 and detects if an audience is present in a recording. If the liveness value is above 0.8, there is a strong likelihood that the track is live. Acousticness is the confidence measure of the track being acoustic. It varies from 0.0 to 1.0, with 1.0 representing high confidence that the track is acoustic. Loudness ranges from -60 to 0 and is measured in decibels (dB). It suggests the overall loudless averaged over the entire track. The measure of danceability includes a combination of tempo,  rhythm stability, beat strength and regularity. It rates how suitable a track is for dancing from 0.0 to 1.0 with 1 being the most danceable. Duration measures the length of the track in milliseconds (ms). The instrumentalness feature tracks whether a song contains vocals. “Ooh” and “aah” sounds are treated as instrumental in this context. Rap or spoken word tracks are considered vocal. Instrumentalness ranges from 0 to 1.0 with 1.0 being the most instrumental. Speechiness is the opposite of instrumentalness, measuring the relative length of the track containing any kind of human voice. The tempo feature gives information on the tempo of the track in Beat Per Minute (BPM). Valence measures the positiveness of the track, higher valence relates to more cheerful and upbeat songs. Lastly, popularity is calculated by an algorithm that is based on the total number of plays the track has had and how recent those plays are. 
 
@@ -59,7 +59,7 @@ There were ``r num_genres`` genres. We condensed these into the top 20 occurring
 
 ### All genres
 
-Here are all the original genres.
+Here are all the original genres. As you can see there are thousands of them, and most of them are obscure. Some seem to not even make sense (like the genre "`[]`").
 
 ```{r}
 genre %>% 
@@ -69,7 +69,19 @@ genre %>%
 
 ### Top 100
 
-This is the top 100 terms found from all the genres. These will be used to create the simplified genres.
+```{r}
+num_simp <- all_terms %>% 
+  group_by(term) %>% 
+  summarise(n = n()) %>% 
+  arrange(desc(n)) %>% 
+  head(100) %>% 
+  summarise(
+    n = sum(n)
+  ) %>% pull(n)
+```
+
+
+This is the top 100 terms found from all the genres. These terms will be used to create the simplified genres. Note that some of the original genres are double counted, such as original genre `african rock` being in the simplified genres `african` and `rock`.
 
 ```{r}
 all_terms %>% 
@@ -106,7 +118,19 @@ all_terms %>%
 
 ### Final Condensed Gernre Dataset
 
-We use these top 20 to create a more concisely labeled dataset (along with the label other).
+```{r}
+simp_cond <- all_terms %>% 
+  group_by(term) %>% 
+  summarise(
+    n = n()
+  ) %>% 
+  arrange(desc(n))
+num_simp_tot <- simp_cond %>% 
+  nrow()
+```
+
+
+We use these top 20 to create a more concisely labeled dataset. We also include the label `other` to account for the other ``r num_simp_tot - 20`` genres with their occurrences less than or equal to ``r simp_cond[21,]$n``.
 
 ```{r}
 # higher in case when get priority
@@ -159,7 +183,7 @@ condensed %>%
 
 ### Condensed genre counts (removed "other")
 
-This graph shows the number of occurrances of each simplified genre without the "other" category.
+This graph shows the number of occurrances of each simplified genre without the "other" category (so the scale is slighly easier to read).
 
 ```{r}
 condensed %>% 
@@ -176,13 +200,15 @@ condensed %>%
 
 ### r-values
 
+The second question we want to answer is to see if any features have strong linear correlations to other features. To do this, we use r-values and their corresponding graphs.
+
 #### All Combinations of Features {.tabset .tabset-pills}
 
-The second question we want to answer is to see if any features have strong linear correlations to other features. First, we found r-value combinations between all of the features, which is shown in the table below. 
+First, we found r-value between combinations of all the features, which is shown in the table below.
 
 ##### Raw r-values
 
-The raw r-values
+The raw r-values between every combination of features.
 
 ```{r rows.print=11}
 year <- read_csv("data/data_by_year.csv", col_types = cols())
@@ -231,7 +257,7 @@ corrplot.mixed(
 
 #### Filter r values {.tabset .tabset-pills}
 
-As this table shows, some features seem to have strong linear relationships, while some features seem to not have a strong linear relationship. Next, we filtered for the absolute value of r-values only over `.9` to find the strongest feature relations. You can see some other thresholds below. We chose `.9` as a threshold arbitrarily since there were many features that correlated. Below are different thresholds.
+As the table above shows, some features seem to have strong linear relationships, while some features seem to not have a strong linear relationship. To isolate those, we filtered for the absolute value of r-values only over `.9` to find the strongest feature relations. We chose `.9` as a threshold arbitrarily since there were many features that correlated. You can see some other thresholds below.
 
 ##### threshold = `0.9`
 
@@ -286,6 +312,8 @@ corrplot(
 )
 ```
 
+There are ``r sum(apply(allr, 2, function(x) length(which(!is.na(x))))) / 2`` r-values above this threshold.
+
 ##### `0.8`
 
 ```{r}
@@ -307,6 +335,8 @@ corrplot(
   na.label = "?"
 )
 ```
+
+There are ``r sum(apply(allr, 2, function(x) length(which(!is.na(x))))) / 2`` r-values above this threshold.
 
 ##### `0.7`
 
@@ -330,6 +360,8 @@ corrplot(
 )
 ```
 
+There are ``r sum(apply(allr, 2, function(x) length(which(!is.na(x))))) / 2`` r-values above this threshold.
+
 ##### `0.6`
 
 ```{r}
@@ -352,6 +384,7 @@ corrplot(
 )
 ```
 
+There are ``r sum(apply(allr, 2, function(x) length(which(!is.na(x))))) / 2`` r-values above this threshold.
 
 ##### `none`
 
@@ -375,12 +408,15 @@ corrplot(
 )
 ```
 
+There are ``r sum(apply(allr, 2, function(x) length(which(!is.na(x))))) / 2`` r-values above this threshold.
 
 ### Top correlated features {.tabset .tabset-pills}
 
 Energy is included in each of the three strongest correlations. Energy is strongly related to acousticness, loudness and tempo. The three plots show each of the three features graphed vs energy. Each graph includes a line with a linear method to show the approximate linear regression line. While an increase in acousticness relates to a decrease in energy, an increase in loudness and tempo relates to an increase in energy.
 
 #### Acousticness vs Energy
+
+A negative correlation.
 
 ```{r}
 year %>% 
@@ -395,6 +431,8 @@ year %>%
 
 #### Loudness vs Energy
 
+A positive correlation.
+
 ```{r}
 year %>% 
   ggplot(aes(y = energy, x = loudness)) +
@@ -407,6 +445,8 @@ year %>%
 ```
 
 #### Tempo vs Energy
+
+A positive correlation.
 
 ```{r}
 year %>% 
@@ -427,11 +467,15 @@ It is hard to say what this means exactly, but it does suggest a few possibiliti
 
 #### Graph
 
+Plotted feature vs feature.
+
 ```{r}
 pairs(year[,c(5, 2, 8, 10)])
 ```
 
 #### Table
+
+The raw r-values.
 
 ```{r}
 correlate(year[,c(5, 2, 8, 10)])
@@ -465,7 +509,7 @@ condensed %>%
 
 ### Boxplots {.tabset .tabset-pills}
 
-Look. Boxplots.
+We made boxplots on each genre for all of features.
 
 #### Acousticness
 
@@ -566,7 +610,7 @@ condensed %>%
   theme_bw()
 ```
 
-### Density Plots {.tabset .tabset-pill}
+### Density Plots {.tabset .tabset-pills}
 
 Density plots. These are messy so in the next secion we will try to make sense of them.
 
@@ -1180,7 +1224,7 @@ arr2
 
 ### Popularity
 
-Find most popular by finding highest mean popularity.
+We found the most popular by finding the genre with the highest mean popularity. Here you can see the genre with the highest mean popularity was `rap`.
 
 ```{r}
 foo %>% 
@@ -1188,7 +1232,7 @@ foo %>%
   arrange(desc(m_po))
 ```
 
-t-test for popularity (again)
+We then ran the t-test for the feature popularity between all genres.
 
 ```{r}
 arr <- array(numeric(),
@@ -1213,25 +1257,26 @@ for (i in seq(21)) {
 arr
 ```
 
-Isolate most popular
+<!-- Then, we isolated only the significant p-values (`< 0.05`). -->
 
-```{r}
-# Filter
-arr2 <- arr
-arr2[arr2 > 0.05] <- NA
-arr2
-```
+<!-- ```{r} -->
+<!-- # Filter -->
+<!-- arr2 <- arr -->
+<!-- arr2[arr2 > 0.05] <- NA -->
+<!-- arr2 -->
+<!-- ``` -->
 
-Only look at the most popular music (rap).
+<!-- Only look at the most popular music (rap). -->
 
-```{r}
-arr2[18]
-```
+<!-- ```{r} -->
+<!-- arr2[18] -->
+<!-- ``` -->
 
 Isolate genres that didn't have `p-value < 0.5` and therefore cannot be dismissed as not also as popular as rap.
 
 ```{r}
-arr2[18] %>% filter(is.na(rap))
+# arr2[18] %>% filter(is.na(rap))
+arr[18] %>% filter(rap > 0.05 & rap != 0.5000)
 ```
 
 Does this make sense? (Context)
