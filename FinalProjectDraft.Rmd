@@ -13,7 +13,7 @@ output:
 ---
 
 ```{r setup, include=FALSE, echo = TRUE}
-knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message=FALSE)
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message=FALSE, rows.print=11)
 library(tidyverse)
 # install.packages(DT)
 library(DT)
@@ -440,9 +440,9 @@ condensed %>%
 ```
 -->
 
-### Explaination
-
 ### Boxplots {.tabset .tabset-pills}
+
+Look. Boxplots.
 
 #### Acousticness
 
@@ -543,7 +543,9 @@ condensed %>%
   theme_bw()
 ```
 
-### Density {.tabset .tabset-pill}
+### Density Plots {.tabset .tabset-pill}
+
+Look. Density plots.
 
 ```{r}
 genres_names <- condensed$simple_genre %>% unique()
@@ -733,6 +735,37 @@ condensed %>%
 ### t-tests {.tabset .tabset-pills}
 
 ```{r}
+t_test = function(mean1, sd1, total1, mean2, sd2, total2)
+{
+  z = (mean1 - mean2) /
+    sqrt((sd1 * sd1 / total1) + (sd2 * sd2 / total2))
+  if (total1 > total2) {
+    df = total2 - 1
+  }
+  else {
+    df = total1 - 1
+  }
+  
+  p_val = pt(z, df)
+  return (p_val)
+}
+```
+
+
+We ran t-tests to find differences between genres in the different features. The t-test statistic^[http://www.sthda.com/english/wiki/t-test-formula] is as follows:
+
+* Let $a$ and $a$ be the two populations.
+* Let $m_a$ and $m_b$ be the means of each population
+* Let $s_a$ and $s_b$ be the standard deviations of each population
+* Let $n_a$ and $n_b$ be the sizes of each population
+
+$$
+t = \frac{m_a - m_b}{\sqrt{\frac{s_a^2}{n_a}+\frac{s_b^2}{n_b}}}
+$$
+
+We use this test statistic to calculate the p-value by finding the corresponding quantile from the student t distribution with $\max(n_a, n_b)-1$ degrees of freedom. We do this test between every combination of genres for all features:
+
+```{r}
 # setup
 foo <- condensed %>% 
   group_by(simple_genre) %>% 
@@ -763,20 +796,6 @@ foo <- condensed %>%
     sd_va = sd(valence),
     sd_po = sd(popularity),
   )
-
-t_test = function(mean1, sd1, total1, mean2, sd2, total2)
-{
-  z = (mean1 - mean2) / sqrt((sd1 * sd1 / total1) + (sd2 * sd2 / total2))
-  if (total1 > total2) {
-    df = total2 - 1
-  }
-  else {
-    df = total1 - 1
-  }
-  
-  p_val = pt(z, df)
-  return (p_val)
-}
 ```
 
 #### acousticness
@@ -1138,11 +1157,11 @@ arr2
 
 ### Popularity
 
-Find most popular
+Find most popular by finding highest mean popularity.
 
 ```{r}
 foo %>% 
-  select(simple_genre, n, m_po, everything()) %>% 
+  select(simple_genre, n, m_po, sd_po) %>% 
   arrange(desc(m_po))
 ```
 
