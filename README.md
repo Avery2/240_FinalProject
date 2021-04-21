@@ -1,5 +1,7 @@
 # 240 Final Project
 
+Final project for Stats 240. Created with R Markdown.
+
 | Criteria       | Points |
 |----------------|--------|
 | Background     | 2      |
