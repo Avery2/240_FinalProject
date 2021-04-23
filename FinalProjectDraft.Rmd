@@ -60,6 +60,8 @@ genre_term_count <- all_terms %>%
   summarise(n = n()) %>% 
   arrange(desc(n)) %>% 
   head(20)
+
+theme_set(theme_bw())
 ```
 
 There were ``r num_genres`` genres. We condensed these into the top 20 occurring terms in these genres using regular expressions and counting the occurrences.
@@ -174,7 +176,7 @@ condensed %>%
   arrange(desc(n))
 ```
 
-### Condensed genre conunts
+### Condensed genre counts
 
 This graph shows the number of occurrances of each simplified genre.
 
@@ -615,6 +617,28 @@ condensed %>%
   ggtitle(label = "valence") +
   theme_bw()
 ```
+### Assumptions
+
+```{r}
+feature_names <- colnames(condensed %>% select(-c(genres, simple_genre, key, mode)))
+# feature_names2 <- colnames(condensed %>% select(-c(genres, simple_genre, key, mode)))
+for (i in seq(length(feature_names))) {
+  feature_names[i] <- feature_names[i] %>% substr(1, 2) %>% str_c("m_", .) %>% print()
+}
+for (f in feature_names) {
+  gr <- foo %>%
+    # filter(simple_genre == g) %>%
+    ggplot(aes_string(x = f)) +
+    geom_density() +
+    ggtitle(
+      label = str_c(" ", f)
+    ) +
+    theme_bw()
+  gr %>%
+    print()
+}
+```
+
 
 ### t-tests {.tabset .tabset-pills}
 
@@ -708,7 +732,11 @@ for (i in seq(21)) {
 }
 
 arr
+```
 
+Filtered for only significant differences (`p-value < 0.5`).
+
+```{r}
 # Filter
 arr2 <- arr
 arr2[arr2 > 0.05] <- NA
@@ -740,7 +768,11 @@ for (i in seq(21)) {
 }
 
 arr
+```
 
+Filtered for only significant differences (`p-value < 0.5`).
+
+```{r}
 # Filter
 arr2 <- arr
 arr2[arr2 > 0.05] <- NA
@@ -772,7 +804,11 @@ for (i in seq(21)) {
 }
 
 arr
+```
 
+Filtered for only significant differences (`p-value < 0.5`).
+
+```{r}
 # Filter
 arr2 <- arr
 arr2[arr2 > 0.05] <- NA
@@ -804,7 +840,11 @@ for (i in seq(21)) {
 }
 
 arr
+```
 
+Filtered for only significant differences (`p-value < 0.5`).
+
+```{r}
 # Filter
 arr2 <- arr
 arr2[arr2 > 0.05] <- NA
@@ -836,7 +876,11 @@ for (i in seq(21)) {
 }
 
 arr
+```
 
+Filtered for only significant differences (`p-value < 0.5`).
+
+```{r}
 # Filter
 arr2 <- arr
 arr2[arr2 > 0.05] <- NA
@@ -868,7 +912,11 @@ for (i in seq(21)) {
 }
 
 arr
+```
 
+Filtered for only significant differences (`p-value < 0.5`).
+
+```{r}
 # Filter
 arr2 <- arr
 arr2[arr2 > 0.05] <- NA
@@ -900,7 +948,11 @@ for (i in seq(21)) {
 }
 
 arr
+```
 
+Filtered for only significant differences (`p-value < 0.5`).
+
+```{r}
 # Filter
 arr2 <- arr
 arr2[arr2 > 0.05] <- NA
@@ -932,7 +984,11 @@ for (i in seq(21)) {
 }
 
 arr
+```
 
+Filtered for only significant differences (`p-value < 0.5`).
+
+```{r}
 # Filter
 arr2 <- arr
 arr2[arr2 > 0.05] <- NA
@@ -964,7 +1020,11 @@ for (i in seq(21)) {
 }
 
 arr
+```
 
+Filtered for only significant differences (`p-value < 0.5`).
+
+```{r}
 # Filter
 arr2 <- arr
 arr2[arr2 > 0.05] <- NA
@@ -996,7 +1056,11 @@ for (i in seq(21)) {
 }
 
 arr
+```
 
+Filtered for only significant differences (`p-value < 0.5`).
+
+```{r}
 # Filter
 arr2 <- arr
 arr2[arr2 > 0.05] <- NA
@@ -1056,6 +1120,36 @@ condensed %>%
 Additionally, we made a density plot of our estimator, the mean popularity, to check that it looks normally distributed. We did this so we know using a t-test is appropriate. As you can see, the plot seem normally distributed so a t-test is appropriate.
 
 ```{r}
+foo <- condensed %>% 
+  group_by(simple_genre) %>% 
+  summarise(
+    n = n(),
+    # 
+    m_ac = mean(acousticness),
+    m_da = mean(danceability),
+    m_du = mean(duration_ms),
+    m_en = mean(energy),
+    m_in = mean(instrumentalness),
+    m_li = mean(liveness),
+    m_lo = mean(loudness),
+    m_sp = mean(speechiness),
+    m_te = mean(tempo),
+    m_va = mean(valence),
+    m_po = mean(popularity),
+    # 
+    sd_ac = sd(acousticness),
+    sd_da = sd(danceability),
+    sd_du = sd(duration_ms),
+    sd_en = sd(energy),
+    sd_in = sd(instrumentalness),
+    sd_li = sd(liveness),
+    sd_lo = sd(loudness),
+    sd_sp = sd(speechiness),
+    sd_te = sd(tempo),
+    sd_va = sd(valence),
+    sd_po = sd(popularity),
+  )
+
 foo %>%
   ggplot(aes(x = m_po)) +
   geom_density() +
@@ -1470,25 +1564,71 @@ condensed %>%
 colnames(condensed %>% select(-c(genres, key, mode, simple_genre)))
 # acousticness danceability duration_ms energy instrumentalness liveness loudness speechiness tempo valence popularity  
 # "acousticness" "danceability" "duration_ms" "energy" "instrumentalness" "liveness" "loudness" "speechiness" "tempo" "valence" "popularity"
+```
 
+```{r}
+foo %>%
+  ggplot(aes(x = m_po)) +
+  geom_density() +
+  ylab("Density") +
+  xlab("Mean Popularity") +
+  theme_bw()
+```
+
+
+```{r check normality}
 genres_names <- condensed$simple_genre %>% unique()
 feature_names <- colnames(condensed %>% select(-c(genres, simple_genre, key, mode)))
 
-for (g in genres_names) {
-  for (f in feature_names) {
-    gr <- condensed %>%
-      filter(simple_genre == g) %>%
-      ggplot(aes_string(x = f)) +
-      geom_density() +
-      ggtitle(
-        label = str_c(g, " ", f)
-      ) +
-      theme_bw()
-    gr %>%
-      print()
-  }
+for (i in seq(length(feature_names))) {
+  feature_names[i] <- feature_names[i] %>% substr(1, 2) %>% str_c("m_", .) %>% print()
 }
+```
 
+
+```{r check normality}
+# for (g in genres_names) {
+#   for (f in feature_names) {
+#     gr <- condensed %>%
+#       filter(simple_genre == g) %>%
+#       ggplot(aes_string(x = f)) +
+#       geom_density() +
+#       ggtitle(
+#         label = str_c(g, " ", f)
+#       ) +
+#       theme_bw()
+#     gr %>%
+#       print()
+#   }
+# }
+i <- 0
+# for (g in genres_names) {
+feature_names <- colnames(condensed %>% select(-c(genres, simple_genre, key, mode)))
+# feature_names2 <- colnames(condensed %>% select(-c(genres, simple_genre, key, mode)))
+for (i in seq(length(feature_names))) {
+  feature_names[i] <- feature_names[i] %>% substr(1, 2) %>% str_c("m_", .) %>% print()
+}
+for (f in feature_names) {
+  gr <- foo %>%
+    # filter(simple_genre == g) %>%
+    ggplot(aes_string(x = f)) +
+    geom_density() +
+    ggtitle(
+      label = str_c(" ", f)
+    ) +
+    theme_bw()
+  gr %>%
+    print()
+}
+  # i <- i + 1
+  # if (i > 2) {
+  #   break
+  # }
+# }
+```
+
+
+```{r}
 # Generate with for loop
 
 for (f in feature_names) {
