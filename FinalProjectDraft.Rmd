@@ -622,6 +622,39 @@ condensed %>%
 ### Assumptions
 
 ```{r}
+# setup
+foo <- condensed %>% 
+  group_by(simple_genre) %>% 
+  summarise(
+    n = n(),
+    # 
+    m_ac = mean(acousticness),
+    m_da = mean(danceability),
+    m_du = mean(duration_ms),
+    m_en = mean(energy),
+    m_in = mean(instrumentalness),
+    m_li = mean(liveness),
+    m_lo = mean(loudness),
+    m_sp = mean(speechiness),
+    m_te = mean(tempo),
+    m_va = mean(valence),
+    m_po = mean(popularity),
+    # 
+    sd_ac = sd(acousticness),
+    sd_da = sd(danceability),
+    sd_du = sd(duration_ms),
+    sd_en = sd(energy),
+    sd_in = sd(instrumentalness),
+    sd_li = sd(liveness),
+    sd_lo = sd(loudness),
+    sd_sp = sd(speechiness),
+    sd_te = sd(tempo),
+    sd_va = sd(valence),
+    sd_po = sd(popularity),
+  )
+```
+
+```{r}
 feature_names <- colnames(condensed %>% select(-c(genres, simple_genre, key, mode)))
 # feature_names2 <- colnames(condensed %>% select(-c(genres, simple_genre, key, mode)))
 for (i in seq(length(feature_names))) {
@@ -674,39 +707,6 @@ t = \frac{m_a - m_b}{\sqrt{\frac{s_a^2}{n_a}+\frac{s_b^2}{n_b}}}
 $$
 
 We use this test statistic to calculate the p-value by finding the corresponding quantile from the student t distribution with $\max(n_a, n_b)-1$ degrees of freedom. While we will focus on analyzing popularity in particular in the next section, we do this test between every combination of genres for all features:
-
-```{r}
-# setup
-foo <- condensed %>% 
-  group_by(simple_genre) %>% 
-  summarise(
-    n = n(),
-    # 
-    m_ac = mean(acousticness),
-    m_da = mean(danceability),
-    m_du = mean(duration_ms),
-    m_en = mean(energy),
-    m_in = mean(instrumentalness),
-    m_li = mean(liveness),
-    m_lo = mean(loudness),
-    m_sp = mean(speechiness),
-    m_te = mean(tempo),
-    m_va = mean(valence),
-    m_po = mean(popularity),
-    # 
-    sd_ac = sd(acousticness),
-    sd_da = sd(danceability),
-    sd_du = sd(duration_ms),
-    sd_en = sd(energy),
-    sd_in = sd(instrumentalness),
-    sd_li = sd(liveness),
-    sd_lo = sd(loudness),
-    sd_sp = sd(speechiness),
-    sd_te = sd(tempo),
-    sd_va = sd(valence),
-    sd_po = sd(popularity),
-  )
-```
 
 
 #### acousticness
@@ -1588,7 +1588,7 @@ for (i in seq(length(feature_names))) {
 ```
 
 
-```{r check normality}
+```{r}
 # for (g in genres_names) {
 #   for (f in feature_names) {
 #     gr <- condensed %>%
@@ -1606,7 +1606,7 @@ for (i in seq(length(feature_names))) {
 i <- 0
 # for (g in genres_names) {
 feature_names <- colnames(condensed %>% select(-c(genres, simple_genre, key, mode)))
-# feature_names2 <- colnames(condensed %>% select(-c(genres, simple_genre, key, mode)))
+feature_names2 <- colnames(condensed %>% select(-c(genres, simple_genre, key, mode)))
 for (i in seq(length(feature_names))) {
   feature_names[i] <- feature_names[i] %>% substr(1, 2) %>% str_c("m_", .) %>% print()
 }
@@ -1633,7 +1633,7 @@ for (f in feature_names) {
 ```{r}
 # Generate with for loop
 
-for (f in feature_names) {
+for (f in feature_names2) {
   gr <- condensed %>%
     ggplot(aes_string(x = f, color = quote(simple_genre))) +
     geom_density() +
@@ -1642,7 +1642,10 @@ for (f in feature_names) {
   gr %>%
     print()
 }
+```
 
+
+```{r}
 # colnames(condensed %>% select(-c(genres, key, mode, simple_genre)))
 
 
