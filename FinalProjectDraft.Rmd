@@ -778,7 +778,8 @@ condensed %>%
   ggtitle(label = "Valence Density Plot") +
   theme_bw()
 ```
-### Assumptions
+
+### Assumptions {.tabset .tabset-pills}
 
 ```{r}
 # setup
@@ -813,26 +814,108 @@ foo <- condensed %>%
   )
 ```
 
-```{r}
-feature_names <- colnames(condensed %>% select(-c(genres, simple_genre, key, mode)))
-# feature_names2 <- colnames(condensed %>% select(-c(genres, simple_genre, key, mode)))
-for (i in seq(length(feature_names))) {
-  feature_names[i] <- feature_names[i] %>% substr(1, 2) %>% str_c("m_", .) %>% print()
-}
-for (f in feature_names) {
-  gr <- foo %>%
-    # filter(simple_genre == g) %>%
-    ggplot(aes_string(x = f)) +
+We cannot run a t-test on a population that isn't normal. So to check for normality, we plot the populations that we are testing. Of these, popularity is the most clearly normal so we will do most of our analysis with popularity. However, some other graphs seem possibly normal, such as danceability and liveness.
+
+```{r checking normality}
+# feature_names1 <- colnames(condensed %>% select(-c(genres, simple_genre, key, mode)))
+feature_names2 <- colnames(condensed %>% select(-c(genres, simple_genre, key, mode)))
+# for (i in seq(length(feature_names1))) {
+#   feature_names1[i] <- feature_names1[i] %>% substr(1, 2) %>% str_c("m_", .)
+# }
+# i <- 1
+# for (f in feature_names1) {
+#   gr <- foo %>%
+#     ggplot(aes_string(x = f)) +
+#     geom_density() +
+#     ggtitle(
+#       label = str_c(" ", feature_names2[i])
+#     )
+#   gr %>%
+#     print()
+#   gr %>% 
+#     typeof() %>% 
+#     print()
+#   i <- i + 1
+# }
+plot_normal = function (data, name) {
+  sm_name = str_c("m_",  substr(name, 1, 2))
+  data %>%
+    ggplot(aes_string(x = sm_name)) +
     geom_density() +
     ggtitle(
-      label = str_c(" ", f)
+      label = str_c("Distribution of ", name, " means")
     ) +
-    theme_bw()
-  gr %>%
-    print()
+    xlab(str_c("mean ",name))
 }
+plots <- list()
+plots <- lapply(X = c(feature_names2), FUN = plot_normal, data = foo)
 ```
 
+#### `r feature_names2[1]`
+
+```{r}
+plots[[1]]
+```
+
+#### `r feature_names2[2]`
+
+```{r}
+plots[[2]]
+```
+
+#### `r feature_names2[3]`
+
+```{r}
+plots[[3]]
+```
+
+#### `r feature_names2[4]`
+
+```{r}
+plots[[4]]
+```
+
+#### `r feature_names2[5]`
+
+```{r}
+plots[[5]]
+```
+
+#### `r feature_names2[6]`
+
+```{r}
+plots[[6]]
+```
+
+#### `r feature_names2[7]`
+
+```{r}
+plots[[7]]
+```
+
+#### `r feature_names2[8]`
+
+```{r}
+plots[[8]]
+```
+
+#### `r feature_names2[9]`
+
+```{r}
+plots[[9]]
+```
+
+#### `r feature_names2[10]`
+
+```{r}
+plots[[10]]
+```
+
+#### `r feature_names2[11]`
+
+```{r}
+plots[[11]]
+```
 
 ### t-tests {.tabset .tabset-pills}
 
@@ -854,7 +937,7 @@ t_test = function(mean1, sd1, total1, mean2, sd2, total2)
 ```
 
 
-We ran t-tests to find differences between genres in the different features. The t-test statistic^[http://www.sthda.com/english/wiki/t-test-formula] is as follows:
+We ran t-tests to find differences between genres in the different features we considered normal. The t-test statistic^[http://www.sthda.com/english/wiki/t-test-formula] is as follows:
 
 * Let $a$ and $a$ be the two populations.
 * Let $m_a$ and $m_b$ be the means of each population
@@ -865,9 +948,9 @@ $$
 t = \frac{m_a - m_b}{\sqrt{\frac{s_a^2}{n_a}+\frac{s_b^2}{n_b}}}
 $$
 
-We use this test statistic to calculate the p-value by finding the corresponding quantile from the student t distribution with $\max(n_a, n_b)-1$ degrees of freedom. While we will focus on analyzing popularity in particular in the next section, we do this test between every combination of genres for all features:
+We use this test statistic to calculate the p-value by finding the corresponding quantile from the student t distribution with $\max(n_a, n_b)-1$ degrees of freedom. While we will focus on analyzing popularity in particular in the next section, we do this test for danceability and popularity as well. The results of these tests are shown below.
 
-
+<!--
 #### acousticness
 
 All t-test between genres for acousticness.
@@ -904,6 +987,8 @@ arr2[arr2 > 0.05] <- NA
 arr2
 ```
 
+-->
+
 #### danceability
 
 All t-test between genres for danceability.
@@ -939,6 +1024,8 @@ arr2 <- arr
 arr2[arr2 > 0.05] <- NA
 arr2
 ```
+
+<!--
 
 #### duration_ms
 
@@ -1048,6 +1135,8 @@ arr2[arr2 > 0.05] <- NA
 arr2
 ```
 
+-->
+
 #### liveness
 
 All t-test between genres for liveness.
@@ -1083,6 +1172,8 @@ arr2 <- arr
 arr2[arr2 > 0.05] <- NA
 arr2
 ```
+
+<!--
 
 #### loudness
 
@@ -1228,6 +1319,8 @@ arr2[arr2 > 0.05] <- NA
 arr2
 ```
 
+-->
+
 #### popularity
 
 All t-test between genres for popularity.
@@ -1264,10 +1357,9 @@ arr2[arr2 > 0.05] <- NA
 arr2
 ```
 
-
 ### Popularity
 
-We decided to further examine the popularity of the genres in depth to see if we could discover the most popular genre(s).
+We decided to further examine the popularity of the genres in depth to see if we could discover the most popular genre(s). We focus on analyzing the feature popularity because we are the most confident it is normal, and also because the results make sense contextually.
 
 We made a graph to compare the box plots of all the genres with their popularity in order to get an overview of the distributions before jumping into our t tests. Overall, the boxplots show that rap has the highest mean popularity for all of the genres. Next, we will use t-tests to evaluate if the difference in the means of the genres is significant enough for us to conclude that rap has the highest mean popularity. 
 
@@ -1420,6 +1512,7 @@ knitr::opts_chunk$set(
 <!-- Additional Analysis is commented out so it's possible to knit everything without taking a really long time. -->
 
 <!--
+
 ```{r additional data analysis}
 ## Feature comparisons
 
@@ -1750,15 +1843,11 @@ foo %>%
 ```
 
 ```{r check normality}
-genres_names <- condensed$simple_genre %>% unique()
-feature_names <- colnames(condensed %>% select(-c(genres, simple_genre, key, mode)))
-
-for (i in seq(length(feature_names))) {
-  feature_names[i] <- feature_names[i] %>% substr(1, 2) %>% str_c("m_", .) %>% print()
-}
-```
-
-```{r}
+# genres_names <- condensed$simple_genre %>% unique()
+# feature_names <- colnames(condensed %>% select(-c(genres, simple_genre, key, mode)))
+# for (i in seq(length(feature_names))) {
+#   feature_names[i] <- feature_names[i] %>% substr(1, 2) %>% str_c("m_", .) %>% print()
+# }
 # for (g in genres_names) {
 #   for (f in feature_names) {
 #     gr <- condensed %>%
@@ -1773,30 +1862,25 @@ for (i in seq(length(feature_names))) {
 #       print()
 #   }
 # }
-i <- 0
-# for (g in genres_names) {
+
 feature_names <- colnames(condensed %>% select(-c(genres, simple_genre, key, mode)))
 feature_names2 <- colnames(condensed %>% select(-c(genres, simple_genre, key, mode)))
 for (i in seq(length(feature_names))) {
-  feature_names[i] <- feature_names[i] %>% substr(1, 2) %>% str_c("m_", .) %>% print()
+  feature_names[i] <- feature_names[i] %>% substr(1, 2) %>% str_c("m_", .)
 }
+i <- 1
 for (f in feature_names) {
   gr <- foo %>%
-    # filter(simple_genre == g) %>%
     ggplot(aes_string(x = f)) +
     geom_density() +
     ggtitle(
-      label = str_c(" ", f)
+      label = str_c(" ", feature_names2[i])
     ) +
     theme_bw()
   gr %>%
     print()
+  i <- i + 1
 }
-  # i <- i + 1
-  # if (i > 2) {
-  #   break
-  # }
-# }
 ```
 
 ```{r}
