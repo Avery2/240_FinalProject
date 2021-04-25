@@ -189,7 +189,9 @@ condensed %>%
   arrange(desc(n)) %>% 
   ggplot(aes(y = simple_genre, x = n, fill=simple_genre)) +
   geom_col() +
-  theme_bw()
+  ggtitle("Count of Condensed Genres") +
+  xlab("Count") +
+  ylab("Simple Genre")
 ```
 
 ### Condensed genre counts (removed "other")
@@ -204,7 +206,9 @@ condensed %>%
   arrange(desc(n)) %>% 
   ggplot(aes(y = simple_genre, x = n, fill = simple_genre)) +
   geom_col() +
-  theme_bw()
+  ggtitle("Count of Condensed Genres") +
+  xlab("Count") +
+  ylab("Simple Genre")
 ```
 
 ## Feature Correlations
@@ -262,6 +266,10 @@ corrplot.mixed(
 #### Filter r values {.tabset .tabset-pills}
 
 As the table above shows, some features seem to have strong linear relationships, while some features seem to not have a strong linear relationship. To isolate those, we filtered for the absolute value of r-values only over `.9` to find the strongest feature relations. We chose `.9` as a threshold arbitrarily since there were many features that correlated. You can see some other thresholds below.
+
+**key**:
+
+ac = acousticness, db = danceability, dur = duration_ms, en = energy, ins = instrumentalness, li = liveness, lo = loudness, sp = speechiness, tmp = tempo, val = valence, pop = popularity
 
 ##### threshold = `0.9`
 
@@ -439,10 +447,9 @@ year %>%
   ggplot(aes(y = energy, x = acousticness)) +
   geom_point() +
   geom_smooth(method = "lm") +
-  ggtitle(
-    label = "Acousticness vs Energy"
-  ) +
-  theme_bw()
+  ggtitle("Relationship Between Acousticness and Energy") +
+  xlab("Acousticness") +
+  ylab("Energy")
 ```
 
 #### Loudness vs Energy
@@ -454,10 +461,9 @@ year %>%
   ggplot(aes(y = energy, x = loudness)) +
   geom_point() +
   geom_smooth(method = "lm") +
-  ggtitle(
-    label = "Loudness vs Energy"
-  ) +
-  theme_bw()
+  ggtitle("Relationship Between Loudness and Energy") +
+  xlab("Loudness") +
+  ylab("Energy")
 ```
 
 #### Tempo vs Energy
@@ -469,10 +475,9 @@ year %>%
   ggplot(aes(y = energy, x = tempo)) +
   geom_point() +
   geom_smooth(method = "lm") +
-  ggtitle(
-    label = "Tempo vs Energy"
-  ) +
-  theme_bw()
+  ggtitle("Relationship Between Tempo and Energy") +
+  xlab("Tempo") +
+  ylab("Energy")
 ```
 
 ### Tangental Correlations {.tabset .tabset-pills}
@@ -516,7 +521,7 @@ feature_names <- colnames(condensed %>% select(-c(genres, simple_genre, key, mod
 condensed %>%
   ggplot(aes(x = popularity, color = simple_genre)) +
   geom_density() +
-  ggtitle(label = "popularity") +
+  ggtitle(label = "Popularity Density Plot") +
   theme_bw()
 ```
 
@@ -526,7 +531,7 @@ condensed %>%
 condensed %>%
   ggplot(aes(x = acousticness, color = simple_genre)) +
   geom_density() +
-  ggtitle(label = "acousticness") +
+  ggtitle(label = "Acousticness Density Plot") +
   theme_bw()
 ```
 
@@ -536,17 +541,17 @@ condensed %>%
 condensed %>%
   ggplot(aes(x = danceability, color = simple_genre)) +
   geom_density() +
-  ggtitle(label = "danceability") +
+  ggtitle(label = "Danceability Density Plot") +
   theme_bw()
 ```
 
-#### duration_ms
+#### duration (ms)
 
 ```{r}
 condensed %>%
   ggplot(aes(x = duration_ms, color = simple_genre)) +
   geom_density() +
-  ggtitle(label = "duration_ms") +
+  ggtitle(label = "Duration (ms) Density Plot") +
   theme_bw()
 ```
 
@@ -556,7 +561,7 @@ condensed %>%
 condensed %>%
   ggplot(aes(x = energy, color = simple_genre)) +
   geom_density() +
-  ggtitle(label = "energy") +
+  ggtitle(label = "Energy Density Plot") +
   theme_bw()
 ```
 
@@ -566,7 +571,7 @@ condensed %>%
 condensed %>%
   ggplot(aes(x = instrumentalness, color = simple_genre)) +
   geom_density() +
-  ggtitle(label = "instrumentalness") +
+  ggtitle(label = "Instrumentalness Density Plot") +
   theme_bw()
 ```
 
@@ -576,7 +581,7 @@ condensed %>%
 condensed %>%
   ggplot(aes(x = liveness, color = simple_genre)) +
   geom_density() +
-  ggtitle(label = "liveness") +
+  ggtitle(label = "Liveness Density Plot") +
   theme_bw()
 ```
 
@@ -586,7 +591,7 @@ condensed %>%
 condensed %>%
   ggplot(aes(x = loudness, color = simple_genre)) +
   geom_density() +
-  ggtitle(label = "loudness") +
+  ggtitle(label = "Loudness Density Plot") +
   theme_bw()
 ```
 
@@ -596,7 +601,7 @@ condensed %>%
 condensed %>%
   ggplot(aes(x = speechiness, color = simple_genre)) +
   geom_density() +
-  ggtitle(label = "speechiness") +
+  ggtitle(label = "Speechiness Density Plot") +
   theme_bw()
 ```
 
@@ -606,7 +611,7 @@ condensed %>%
 condensed %>%
   ggplot(aes(x = tempo, color = simple_genre)) +
   geom_density() +
-  ggtitle(label = "tempo") +
+  ggtitle(label = "Tempo Density Plot") +
   theme_bw()
 ```
 
@@ -616,7 +621,7 @@ condensed %>%
 condensed %>%
   ggplot(aes(x = valence, color = simple_genre)) +
   geom_density() +
-  ggtitle(label = "valence") +
+  ggtitle(label = "Valence Density Plot") +
   theme_bw()
 ```
 ### Assumptions
@@ -1210,18 +1215,28 @@ foo %>%
   select(simple_genre, n, m_po, sd_po)
 ```
 
-The following graph shows the mean popularity for hip, rap, and swedish.
+The following graph shows the popularity for hip, rap, and swedish.
 
 ```{r}
-foo %>%
+# Advised to remove bar graph in favor of box plot
+# foo %>%
+#   filter(simple_genre %in% same_as_rap) %>%
+#   select(simple_genre, n, m_po, sd_po) %>%
+#   ggplot(aes(x = simple_genre, y = m_po, fill = simple_genre)) +
+#   geom_col() +
+#   xlab("Genre") +
+#   guides(fill = guide_legend(title = "Genre")) +
+#   ylab("Mean Popularity")
+
+condensed %>%
   filter(simple_genre %in% same_as_rap) %>%
-  select(simple_genre, n, m_po, sd_po) %>%
-  ggplot(aes(x = simple_genre, y = m_po, fill = simple_genre)) +
-  geom_col() +
+  # select(simple_genre, n, m_po, sd_po) %>%
+  ggplot(aes(x = simple_genre, y = popularity, fill = simple_genre)) +
+  # geom_col() +
+  geom_boxplot() +
   xlab("Genre") +
   guides(fill = guide_legend(title = "Genre")) +
-  ylab("Mean Popularity") + 
-  theme_bw()
+  ylab("Popularity")
 ```
 
 # Discussion
@@ -1248,6 +1263,9 @@ knitr::opts_chunk$set(
 )
 ```
 
+<!-- Additional Analysis is commented out so it's possible to knit everything without taking a really long time. -->
+
+<!--
 ```{r additional data analysis}
 ## Feature comparisons
 
@@ -1577,7 +1595,6 @@ foo %>%
   theme_bw()
 ```
 
-
 ```{r check normality}
 genres_names <- condensed$simple_genre %>% unique()
 feature_names <- colnames(condensed %>% select(-c(genres, simple_genre, key, mode)))
@@ -1586,7 +1603,6 @@ for (i in seq(length(feature_names))) {
   feature_names[i] <- feature_names[i] %>% substr(1, 2) %>% str_c("m_", .) %>% print()
 }
 ```
-
 
 ```{r}
 # for (g in genres_names) {
@@ -1629,7 +1645,6 @@ for (f in feature_names) {
 # }
 ```
 
-
 ```{r}
 # Generate with for loop
 
@@ -1643,7 +1658,6 @@ for (f in feature_names2) {
     print()
 }
 ```
-
 
 ```{r}
 # colnames(condensed %>% select(-c(genres, key, mode, simple_genre)))
@@ -1747,3 +1761,5 @@ condensed %>%
   theme_bw()
 
 ```
+
+-->
