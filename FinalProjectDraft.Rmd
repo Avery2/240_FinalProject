@@ -1364,13 +1364,21 @@ We decided to further examine the popularity of the genres in depth to see if we
 We made a graph to compare the box plots of all the genres with their popularity in order to get an overview of the distributions before jumping into our t tests. Overall, the boxplots show that rap has the highest mean popularity for all of the genres. Next, we will use t-tests to evaluate if the difference in the means of the genres is significant enough for us to conclude that rap has the highest mean popularity. 
 
 ```{r}
+# condensed %>%
+#   ggplot(aes(y = simple_genre, x = popularity, fill = simple_genre)) +
+#   geom_boxplot() +
+#   theme_bw()
 condensed %>%
-  ggplot(aes(y = simple_genre, x = popularity, fill = simple_genre)) +
+  ggplot(aes(
+    y = reorder(simple_genre, popularity),
+    x = popularity,
+    fill = simple_genre
+  )) +
   geom_boxplot() +
   theme_bw()
 ```
 
-Additionally, we made a density plot of our estimator, the mean popularity, to check that it looks normally distributed. We did this so we know using a t-test is appropriate. As you can see, the plot seem normally distributed so a t-test is appropriate.
+We made a density plot of our estimator, the mean popularity, to check that it looks normally distributed. We did this so we know using a t-test is appropriate. As you can see, the plot seem normally distributed so a t-test is appropriate.
 
 ```{r}
 foo <- condensed %>% 
@@ -1412,12 +1420,12 @@ foo %>%
 ```
 
 
-We found the most popular by finding the genre with the highest mean popularity. Here you can see the genre with the highest mean popularity was `rap`.
+<!-- We found the most popular by finding the genre with the highest mean popularity. Here you can see the genre with the highest mean popularity (m_po) was `rap` (sd_po is standard deviation of popularity). -->
 
 ```{r}
-foo %>% 
-  select(simple_genre, n, m_po, sd_po) %>% 
-  arrange(desc(m_po))
+# foo %>% 
+#   select(simple_genre, n, m_po, sd_po) %>% 
+#   arrange(desc(m_po))
 ```
 
 We then ran the t-test for the feature popularity between all genres.
@@ -1445,23 +1453,23 @@ for (i in seq(21)) {
 arr
 ```
 
-We then isolated the genres that didn't have `p-value < 0.5` and therefore cannot be dismissed as not also as popular as rap.
+Next we isolated the genres that didn't have `p-value < 0.5` to find the genres cannot be dismissed as having a different popularity from rap.
 
 ```{r}
 # arr2[18] %>% filter(is.na(rap))
 arr[18] %>% filter(rap > 0.05 & rap != 0.5000)
 ```
 
-To put these results back into context, we show the mean and standard deviation of popularity from these genres. As you can see, their means were very similar, so it makes sense that their p-values were not significant.
+To see if this makes sense, we show the mean and standard deviation of popularity from these genres. As you can see, their means were very similar, so it makes sense that their p-values were not significant.
 
 ```{r}
 same_as_rap <- arr2[18] %>% filter(is.na(rap)) %>% row.names()
-foo %>% 
-  filter(simple_genre %in% same_as_rap) %>% 
+foo %>%
+  filter(simple_genre %in% same_as_rap) %>%
   select(simple_genre, n, m_po, sd_po)
 ```
 
-The following graph shows the popularity for hip, rap, and swedish.
+<!-- The following boxplot shows the popularity for hip, rap, and swedish. -->
 
 ```{r}
 # Advised to remove bar graph in favor of box plot
@@ -1474,23 +1482,43 @@ The following graph shows the popularity for hip, rap, and swedish.
 #   guides(fill = guide_legend(title = "Genre")) +
 #   ylab("Mean Popularity")
 
-condensed %>%
-  filter(simple_genre %in% same_as_rap) %>%
-  # select(simple_genre, n, m_po, sd_po) %>%
-  ggplot(aes(x = simple_genre, y = popularity, fill = simple_genre)) +
-  # geom_col() +
-  geom_boxplot() +
-  xlab("Genre") +
-  guides(fill = guide_legend(title = "Genre")) +
-  ylab("Popularity")
+# condensed %>%
+#   filter(simple_genre %in% same_as_rap) %>%
+#   # select(simple_genre, n, m_po, sd_po) %>%
+#   ggplot(aes(x = simple_genre, y = popularity, fill = simple_genre)) +
+#   # geom_col() +
+#   geom_boxplot() +
+#   xlab("Genre") +
+#   guides(fill = guide_legend(title = "Genre")) +
+#   ylab("Popularity")
 ```
+
+To put these results back into context, we come back to the original boxplots we had. Now, we can draw a line that divides what we can consider the most popular genres from the rest. In this way we can conclude that the simplified genres rap, hip, and swedish are the most popular genres.
+
+```{r}
+condensed %>%
+  ggplot(aes(
+    y = reorder(simple_genre, popularity),
+    x = popularity,
+    fill = simple_genre
+  )) +
+  geom_boxplot() +
+  geom_hline(yintercept = 21-3+.5, color="red", linetype="dashed") +
+  ylab("Simple Genre") +
+  ggtitle(
+    label = "Most Popular Genres"
+    )
+```
+
 
 # Discussion
 If we were to determine the most popular we would need to observe a significant difference between all other values and the top popularity genre mean. From our t-tests to test the genre popularity means, we were not able to come to a definite conclusion on which genre is the most popular. Because all of the p-values are not below .05, we do not have statistical evidence to reject the null that the rap mean is significantly higher than the rest of the genres. Hip and swedish have p-values above .05, so they could all still be the most popular. However, for the genres with p-values below .05, we do have statistical significance evidence that they are not the most popular. This information could be useful for someone trying to create a song because it will give them input into which genres are most popular with listeners. By creating a song in a more popular genre, people may be more likely to listen to the song, which can generate more revenue for the artist. 
  
 We also discovered which features have the strongest linear correlations to each other, vs which features have no linear relationship. We found that energy has a correlation over the absolute value of 0.9 to three other features, acousticness, loudness and tempo. Acousticness has a negative correlation with energy while loudness and tempo both have positive correlations with energy. Considering that acousticness, loudness, and tempo are all measured based on set measurements, while energy is calculated from intensity and activity in the song, we can infer that acousticness, loudness, and tempo all affect the energy of a song. This finding matters because when a producer is trying to make different characteristics of a song come together perfectly, the correlations between specific features may help them adjust said features in order to compliment each other better. 
  
-A short-coming of our analysis is that we do not know how many songs are included in the data for each genre. Some genre’s data may be based on more songs than other genres. In addition, because we only filtered the top 20 highest strings to group genres, some of the genres are not included in our analysis. 
+A short-coming of our analysis is that we do not know how many songs are included in the data for each genre. Some genre’s data may be based on more songs than other genres. In addition, because we only filtered the top 20 highest strings to group genres, some of the genres are not included in our analysis.
+
+Another short-coming was the way in which we created our simplified genres. We used regular expressions that split the original genre names by whitespace, but this resulted in multiple issues. One was the issue of double-counting genres such as `african rap` being counted as `african` and `rap`. Another issue was the fact that some genres like `hip-hop` wouldn't always be seperated by a hyphen in the dataset, so in our top 20 genres we actually have two genres called `hip` and `hop` that likely correspond to just one genre (`hip-hop`). One possible fix to this might have been to do preprocessing for these special cases like replacing the space between `"hip hop"` so it became `"hip-hop"`.
  
 Future work on this dataset could involve testing out more of the features relationships and seeing if they have strong models. We could also look for datasets from other music streaming services, such as Apple Music and Pandora.
 
