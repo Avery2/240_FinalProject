@@ -66,7 +66,7 @@ genre_term_count <- all_terms %>%
 theme_set(theme_bw())
 ```
 
-There were ``r num_genres`` genres. We condensed these into the top 20 occurring terms in these genres using regular expressions and counting the occurrences.
+There were ``r num_genres`` genres. We condensed these into the top 20 occurring terms in these genres using regular expressions and counting the occurrences. We did this because as you can see below, there was initially way too many genres due to their specificity. So, in order to do meaningful analysis we condensed these genres.
 
 ### All genres
 
@@ -91,8 +91,7 @@ num_simp <- all_terms %>%
   ) %>% pull(n)
 ```
 
-
-This is the top 100 terms found from all the genres. These terms will be used to create the simplified genres. Note that some of the original genres are double counted, such as original genre `african rock` being in the simplified genres `african` and `rock`.
+This is the top 100 terms found from all the genres. These terms will be used to create the simplified genres. Note that some of the original genres are double counted, such as original genre `african rock` being in the simplified genres `african` and `rock`. From these counts we concluded that we would use the top 20 of these simplified genres.
 
 ```{r}
 all_terms %>% 
@@ -115,8 +114,42 @@ num_simp <- all_terms %>%
   ) %>% pull(n)
 ```
 
+```{r}
+sm_a <- all_terms %>% 
+  group_by(term) %>% 
+  summarise(n = n()) %>% 
+  arrange(desc(n)) %>% 
+  head(20) %>% 
+  arrange(n) %>% 
+  head(1)
 
-These are the top 20 terms found. They are the ones we will use. Note this only uses ``r round(num_simp / num_genres, 3) * 100`%` of the data since ``r round(1 - num_simp / num_genres, 3) * 100`%` of the data do not fall under these top 20 categories.
+sm_b <- all_terms %>% 
+  group_by(term) %>% 
+  summarise(n = n()) %>% 
+  arrange(desc(n)) %>% 
+  head(25) %>% 
+  arrange(n) %>% 
+  head(1)
+
+sm_c <- all_terms %>% 
+  group_by(term) %>% 
+  summarise(n = n()) %>% 
+  arrange(desc(n)) %>% 
+  head(50) %>% 
+  arrange(n) %>% 
+  head(1)
+
+# sm_a[1] %>% pull()
+# sm_a[2] %>% pull()
+
+lg_a <- all_terms %>% 
+  group_by(term) %>% 
+  summarise(n = n()) %>% 
+  arrange(desc(n)) %>% 
+  head(1)
+```
+
+These are the top 20 terms found. They are the ones we will use. Note this only uses ``r round(num_simp / num_genres, 3) * 100`%` of the data since ``r round(1 - num_simp / num_genres, 3) * 100`%` of the data do not fall under these top 20 categories. We concluded that for our purposes, this means that the top 20 are sufficient simplified genres to do analysis on. We chose the top 20 since after the top 20 there seemed to to be diminishing returns in adding more genres. For example, the 20th top genre ``r sm_a[1] %>% pull()``, had a count of ``r sm_a[2] %>% pull()`` which is not much more than the top 25th and 50th genres, ``r sm_b[1] %>% pull()`` and ``r sm_c[1] %>% pull()``, which have counts of ``r sm_b[2] %>% pull()`` and ``r sm_c[2] %>% pull()`` respectively. The genre with the largest count was ``r lg_a[1] %>% pull()`` with a count of ``r lg_a[2] %>% pull()``. With this in mind, we decided there wasn't much value in including these smaller genres and considered only the top 20 genres.
 
 ```{r}
 # Top terms (double counts...)
@@ -440,7 +473,7 @@ Energy is included in each of the three strongest correlations. Energy is strong
 
 #### Acousticness vs Energy
 
-A negative correlation.
+A negative correlation with r-value ``r cor(year$acousticness, year$energy)``.
 
 ```{r}
 year %>% 
@@ -454,7 +487,7 @@ year %>%
 
 #### Loudness vs Energy
 
-A positive correlation.
+A positive correlation with r-value ``r cor(year$loudness, year$energy)``.
 
 ```{r}
 year %>% 
@@ -468,7 +501,7 @@ year %>%
 
 #### Tempo vs Energy
 
-A positive correlation.
+A positive correlation with r-value ``r cor(year$tempo, year$energy)``.
 
 ```{r}
 year %>% 
@@ -501,6 +534,127 @@ The raw r-values.
 ```{r}
 correlate(year[,c(5, 2, 8, 10)])
 ```
+
+### More Analysis {.tabset .tabset-pills}
+
+As mentioned before, we chose the above threshold of `0.9` somewhat arbitrarily. 
+This was partially motivated by not wanting to make section 3.2.3 too complicated since the number of comparisons between features grows quadratically. 
+However, for completeness, we will show the relationships for the top correlated features above a `0.8` threshold since there seem to be some interesting relationships here as well.
+Below are the correlation plots not yet included.
+
+#### Acousticness vs Loudness
+
+A negative relationship with r-value ``r cor(year$acousticness, year$loudness)``.
+
+```{r}
+year %>% 
+  ggplot(aes(x = acousticness, y = loudness)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  ggtitle("Relationship Between Acousticness and Loudness") +
+  xlab("Acousticness") +
+  ylab("Loudness")
+```
+
+#### Acousticness vs Tempo
+
+A negative relationship with r-value ``r cor(year$acousticness, year$tempo)``.
+
+```{r}
+year %>% 
+  ggplot(aes(x = acousticness, y = tempo)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  ggtitle("Relationship Between Acousticness and Tempo") +
+  xlab("Acousticness") +
+  ylab("Tempo")
+```
+
+#### Acousticness vs Popularity
+
+A negative relationship with r-value ``r cor(year$acousticness, year$popularity)``.
+
+```{r}
+year %>% 
+  ggplot(aes(x = acousticness, y = popularity)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  ggtitle("Relationship Between Acousticness and Popularity") +
+  xlab("Acousticness") +
+  ylab("Popularity")
+```
+
+#### Popularity vs Energy
+
+A positive relationship with r-value ``r cor(year$popularity, year$energy)``.
+
+```{r}
+year %>% 
+  ggplot(aes(x = popularity, y = energy)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  ggtitle("Relationship Between Popularity and Energy") +
+  xlab("Popularity") +
+  ylab("Energy")
+```
+
+#### Popularity vs Instrumentalness
+
+A negative relationship with r-value ``r cor(year$popularity, year$instrumentalness)``.
+
+```{r}
+year %>% 
+  ggplot(aes(x = popularity, y = instrumentalness)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  ggtitle("Relationship Between Popularity and Instrumentalness") +
+  xlab("Popularity") +
+  ylab("Instrumentalness")
+```
+
+#### Popularity vs Loudness
+
+A positive relationship with r-value ``r cor(year$popularity, year$loudness)``.
+
+```{r}
+year %>% 
+  ggplot(aes(x = popularity, y = loudness)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  ggtitle("Relationship Between Popularity and Loudness") +
+  xlab("Popularity") +
+  ylab("Loudness")
+```
+
+#### Loudness vs Tempo
+
+A positive relationship with r-value ``r cor(year$loudness, year$tempo)``.
+
+```{r}
+year %>% 
+  ggplot(aes(x = loudness, y = tempo)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  ggtitle("Relationship Between Loudness and Tempo") +
+  xlab("Loudness") +
+  ylab("Tempo")
+```
+
+
+#### "Tangental Correlations"
+
+These are all of the possible combinations of the features that have some correlation that pass the threshold of `0.8` similar to what was explored in section 3.2.3. Since there are many more features here it's a little more noisy (this is why we chose a threshold of `0.9` previously). We will not do analysis similar to what was done in 3.2.3 for this reason, but will include these graphics and r-values for completeness.
+
+```{r}
+pairs(year[,c(2, 5, 6, 8, 10, 12)])
+```
+
+Table of the r-values.
+
+```{r}
+correlate(year[,c(2, 5, 6, 8, 10, 12)])
+```
+
 
 ## Genre Analysis
 
