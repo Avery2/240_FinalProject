@@ -1430,7 +1430,7 @@ foo %>%
 #   arrange(desc(m_po))
 ```
 
-We then ran the t-test for the feature popularity between all genres.
+We then ran the t-test for the feature popularity between all genres (same as 3.3.3).
 
 ```{r}
 arr <- array(numeric(),
@@ -1451,9 +1451,23 @@ for (i in seq(21)) {
     arr[i, j] <- round(t, 4)
   }
 }
+```
 
+#### t-test p-value tables {.tabset .tabset-pills}
+
+##### All t-tests for popularity.
+
+```{r}
 arr
 ```
+
+##### Isolated `rap` column.
+
+```{r}
+arr2['rap']
+```
+
+#### 
 
 Next we isolated the genres that didn't have `p-value < 0.05` to find the genres cannot be dismissed as having a different popularity from rap.
 
