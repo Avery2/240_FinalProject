@@ -1464,7 +1464,7 @@ arr
 ##### Isolated `rap` column.
 
 ```{r}
-arr2['rap']
+arr['rap']
 ```
 
 #### 
