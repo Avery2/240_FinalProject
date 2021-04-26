@@ -1,11 +1,5 @@
 # 240 Final Project
 
-Final project for Stats 240. Created with R Markdown.
+View online [here](https://avery2.github.io/SpotifyDataAnalysis/). Data from [here](https://www.kaggle.com/yamaerenay/spotify-dataset-19212020-160k-tracks?select=data_by_artist_o.csv).
 
-| Criteria       | Points |
-|----------------|--------|
-| Background     | 2      |
-| Data           | 2      |
-| Graphs         | 2      |
-| Analysis       | 2      |
-| Interpretation | 2      |
+The final project for a statistics class (STAT 240) analyzing Spotify data from kaggle. Created with R Markdown.
