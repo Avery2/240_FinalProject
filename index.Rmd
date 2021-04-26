@@ -1,0 +1,2047 @@
+---
+title: "index"
+author: "Breanna Schneider, Avery Chan, Maja Velichkovich"
+date: "4/11/2021"
+output:
+  html_document:
+    toc: yes
+    toc_float: true
+    number_sections: true
+    theme: united
+    df_print: paged
+    code_folding: hide
+---
+
+```{r setup, include=FALSE, echo = TRUE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message=FALSE, rows.print=11)
+options(dplyr.summarise.inform = FALSE)
+library(tidyverse)
+# install.packages(DT)
+library(DT)
+# install.packages("corrplot")
+library(corrplot)
+library(corrr)
+```
+
+```{r data}
+genre <- read_csv("data/data_by_genres.csv", col_types = cols())
+year <- read_csv("data/data_by_year.csv", col_types = cols())
+```
+
+# Introduction
+ 
+Spotify is one of the larger music streaming services available today with 345 million active users ^[https://newsroom.spotify.com/company-info/]. Instead of having to buy cd’s or download every song you listen to, Spotify allows access to millions of songs. Because Spotify is a centralized platform, it provides us with an opportunity to ask questions about what makes songs successful. 
+
+In order to investigate what makes some songs more successful than others, we will look at if certain features have a strong correlation with other features. In addition, we want to discover the most popular genre. Our data will specify a few genres that may be the most popular. Certain features will be strongly correlated to other features. 
+ 
+
+# Background 
+ 
+The data we are using is based on Spotify data from 1921 to 2020 including over 175,000 audio tracks.We found our data on Kaggle ^[https://www.kaggle.com/yamaerenay/spotify-dataset-19212020-160k-tracks?select=data_by_artist_o.csv]. This dataset groups the data by artist, genre, and year. There are nine different variables measured in the dataset. They are acousticness, danceability, duration, energy, liveness, instrumentalness, loudness, speechiness, valence, popularity, and tempo. 
+ 
+Energy (en) is a perceptual measure of the intensity and activity of a track on a scale from 0.0 to 1.0. Some of the perceptual features that are included in this are dynamic range, perceived loudness, timbre, onset rate, and general entropy. Liveness (li) ranges from 0 to 1 and detects if an audience is present in a recording. If the liveness value is above 0.8, there is a strong likelihood that the track is live. Acousticness (ac) is the confidence measure of the track being acoustic. It varies from 0.0 to 1.0, with 1.0 representing high confidence that the track is acoustic. Loudness (lo) ranges from -60 to 0 and is measured in decibels (dB). It suggests the overall loudless averaged over the entire track. The measure of danceability (db) includes a combination of tempo,  rhythm stability, beat strength and regularity. It rates how suitable a track is for dancing from 0.0 to 1.0 with 1 being the most danceable. Duration (dur) measures the length of the track in milliseconds (ms). The instrumentalness (ins) feature tracks whether a song contains vocals. “Ooh” and “aah” sounds are treated as instrumental in this context. Rap or spoken word tracks are considered vocal. Instrumentalness ranges from 0 to 1.0 with 1.0 being the most instrumental. Speechiness (sp) is the opposite of instrumentalness, measuring the relative length of the track containing any kind of human voice. The tempo (tmp) feature gives information on the tempo of the track in Beat Per Minute (BPM). Valence (val) measures the positiveness of the track, higher valence relates to more cheerful and upbeat songs. Lastly, popularity (pop) is calculated by an algorithm that is based on the total number of plays the track has had and how recent those plays are. 
+ 
+In the rest of our report, we will first group the genres into broader categories and then analyze the features throughout the genres. We will also compare features to each other and test the correlations between two features to see if they have a strong linear relationship or not. Lastly, we will discover which genres are the most popular by using t-tests comparing the genre popularity means. In the end, we will show how popularity is related to different genres, as well and how different features relate to each other.
+
+
+# Analysis
+
+## Genre Condensation {.tabset .tabset-pills}
+
+```{r}
+num_genres <- genre %>% nrow()
+x <- genre %>% 
+  select(genres) %>% 
+  mutate(
+    words = str_split(genres, "\\s"),
+  )
+all_terms <- tibble(term = unlist(x$words, recursive = FALSE))
+# Top terms (double counts...)
+genre_term_count <- all_terms %>% 
+  group_by(term) %>% 
+  summarise(n = n()) %>% 
+  arrange(desc(n)) %>% 
+  head(20)
+
+theme_set(theme_bw())
+```
+
+There were ``r num_genres`` genres. We condensed these into the top 20 occurring terms in these genres using regular expressions and counting the occurrences. We did this because as you can see below, there was initially way too many genres due to their specificity. So, in order to do meaningful analysis we condensed these genres.
+
+### All genres
+
+Here are all the original genres. As you can see there are thousands of them, and most of them are obscure. Some seem to not even make sense (like the genre "`[]`").
+
+```{r}
+genre %>% 
+  select(genres) %>% 
+  DT::datatable()
+```
+
+### Top 100
+
+```{r}
+num_simp <- all_terms %>% 
+  group_by(term) %>% 
+  summarise(n = n()) %>% 
+  arrange(desc(n)) %>% 
+  head(100) %>% 
+  summarise(
+    n = sum(n)
+  ) %>% pull(n)
+```
+
+This is the top 100 terms found from all the genres. These terms will be used to create the simplified genres. Note that some of the original genres are double counted, such as original genre `african rock` being in the simplified genres `african` and `rock`. From these counts we concluded that we would use the top 20 of these simplified genres.
+
+```{r}
+all_terms %>% 
+  group_by(term) %>% 
+  summarise(n = n()) %>% 
+  arrange(desc(n)) %>% 
+  head(100)
+```
+
+### Top 20
+
+```{r}
+num_simp <- all_terms %>% 
+  group_by(term) %>% 
+  summarise(n = n()) %>% 
+  arrange(desc(n)) %>% 
+  head(20) %>% 
+  summarise(
+    n = sum(n)
+  ) %>% pull(n)
+```
+
+```{r}
+sm_a <- all_terms %>% 
+  group_by(term) %>% 
+  summarise(n = n()) %>% 
+  arrange(desc(n)) %>% 
+  head(20) %>% 
+  arrange(n) %>% 
+  head(1)
+
+sm_b <- all_terms %>% 
+  group_by(term) %>% 
+  summarise(n = n()) %>% 
+  arrange(desc(n)) %>% 
+  head(25) %>% 
+  arrange(n) %>% 
+  head(1)
+
+sm_c <- all_terms %>% 
+  group_by(term) %>% 
+  summarise(n = n()) %>% 
+  arrange(desc(n)) %>% 
+  head(50) %>% 
+  arrange(n) %>% 
+  head(1)
+
+# sm_a[1] %>% pull()
+# sm_a[2] %>% pull()
+
+lg_a <- all_terms %>% 
+  group_by(term) %>% 
+  summarise(n = n()) %>% 
+  arrange(desc(n)) %>% 
+  head(1)
+```
+
+These are the top 20 terms found. They are the ones we will use. Note this only uses ``r round(num_simp / num_genres, 3) * 100`%` of the data since ``r round(1 - num_simp / num_genres, 3) * 100`%` of the data do not fall under these top 20 categories. We concluded that for our purposes, this means that the top 20 are sufficient simplified genres to do analysis on. We chose the top 20 since after the top 20 there seemed to to be diminishing returns in adding more genres. For example, the 20th top genre ``r sm_a[1] %>% pull()``, had a count of ``r sm_a[2] %>% pull()`` which is not much more than the top 25th and 50th genres, ``r sm_b[1] %>% pull()`` and ``r sm_c[1] %>% pull()``, which have counts of ``r sm_b[2] %>% pull()`` and ``r sm_c[2] %>% pull()`` respectively. The genre with the largest count was ``r lg_a[1] %>% pull()`` with a count of ``r lg_a[2] %>% pull()``. With this in mind, we decided there wasn't much value in including these smaller genres and considered only the top 20 genres.
+
+```{r}
+# Top terms (double counts...)
+all_terms %>% 
+  group_by(term) %>% 
+  summarise(n = n()) %>% 
+  arrange(desc(n)) %>% 
+  head(20)
+```
+
+### Final Condensed Gernre Dataset
+
+```{r}
+simp_cond <- all_terms %>% 
+  group_by(term) %>% 
+  summarise(
+    n = n()
+  ) %>% 
+  arrange(desc(n))
+num_simp_tot <- simp_cond %>% 
+  nrow()
+```
+
+
+We use these top 20 to create a more concisely labeled dataset. We also include the label `other` to account for the other ``r num_simp_tot - 20`` genres with their occurrences less than or equal to ``r simp_cond[21,]$n``.
+
+```{r}
+# higher in case when get priority
+condensed <- genre %>% 
+  mutate(
+    simple_genre = case_when(
+      str_detect(genres, genre_term_count$term[1]) ~ genre_term_count$term[1],
+      str_detect(genres, genre_term_count$term[2]) ~ genre_term_count$term[2],
+      str_detect(genres, genre_term_count$term[3]) ~ genre_term_count$term[3],
+      str_detect(genres, genre_term_count$term[4]) ~ genre_term_count$term[4],
+      str_detect(genres, genre_term_count$term[5]) ~ genre_term_count$term[5],
+      str_detect(genres, genre_term_count$term[6]) ~ genre_term_count$term[6],
+      str_detect(genres, genre_term_count$term[7]) ~ genre_term_count$term[7],
+      str_detect(genres, genre_term_count$term[8]) ~ genre_term_count$term[8],
+      str_detect(genres, genre_term_count$term[9]) ~ genre_term_count$term[9],
+      str_detect(genres, genre_term_count$term[10]) ~ genre_term_count$term[10],
+      str_detect(genres, genre_term_count$term[11]) ~ genre_term_count$term[11],
+      str_detect(genres, genre_term_count$term[12]) ~ genre_term_count$term[12],
+      str_detect(genres, genre_term_count$term[13]) ~ genre_term_count$term[13],
+      str_detect(genres, genre_term_count$term[14]) ~ genre_term_count$term[14],
+      str_detect(genres, genre_term_count$term[15]) ~ genre_term_count$term[15],
+      str_detect(genres, genre_term_count$term[16]) ~ genre_term_count$term[16],
+      str_detect(genres, genre_term_count$term[17]) ~ genre_term_count$term[17],
+      str_detect(genres, genre_term_count$term[18]) ~ genre_term_count$term[18],
+      str_detect(genres, genre_term_count$term[19]) ~ genre_term_count$term[19],
+      str_detect(genres, genre_term_count$term[20]) ~ genre_term_count$term[20],
+      TRUE ~ "other"
+    )
+  )
+
+condensed %>% 
+  group_by(simple_genre) %>% 
+  summarise(n = n()) %>% 
+  arrange(desc(n))
+```
+
+### Condensed genre counts
+
+This graph shows the number of occurrances of each simplified genre.
+
+```{r}
+condensed %>% 
+  group_by(simple_genre) %>% 
+  summarise(n = n()) %>% 
+  arrange(desc(n)) %>% 
+  ggplot(aes(y = simple_genre, x = n, fill=simple_genre)) +
+  geom_col() +
+  ggtitle("Count of Condensed Genres") +
+  xlab("Count") +
+  ylab("Simple Genre")
+```
+
+### Condensed genre counts (removed "other")
+
+This graph shows the number of occurrances of each simplified genre without the "other" category (so the scale is slighly easier to read).
+
+```{r}
+condensed %>% 
+  group_by(simple_genre) %>% 
+  filter(simple_genre != "other") %>% 
+  summarise(n = n()) %>% 
+  arrange(desc(n)) %>% 
+  ggplot(aes(y = simple_genre, x = n, fill = simple_genre)) +
+  geom_col() +
+  ggtitle("Count of Condensed Genres") +
+  xlab("Count") +
+  ylab("Simple Genre")
+```
+
+## Feature Correlations
+
+### r-values
+
+The second question we want to answer is to see if any features have strong linear correlations to other features. To do this, we use r-values and their corresponding graphs.
+
+#### All Combinations of Features {.tabset .tabset-pills}
+
+First, we found r-value between combinations of all the features, which is shown in the table below.
+
+##### Raw r-values
+
+The raw r-values between every combination of features.
+
+```{r rows.print=11}
+# All r values
+year %>% 
+  select(-c(year, key, mode)) %>% 
+  cor() %>% 
+  round(digits = 2) %>% 
+  data.frame()
+```
+
+##### Correlation plot
+
+The r-values in an easier to view format. The red and blue show signify higher correlations.
+
+```{r}
+year2 <- year %>% 
+  rename(
+    yr = year,
+    ac = acousticness,
+    db = danceability,
+    dur = duration_ms,
+    en = energy,
+    ins = instrumentalness,
+    li = liveness,
+    lo = loudness,
+    sp = speechiness,
+    tmp = tempo,
+    val = valence,
+    pop = popularity,
+    k = key,
+    m = mode
+  )
+corrplot.mixed(
+  round(cor(year2[2:12]), 1),
+  lower = "number",
+  upper = "color"
+)
+```
+
+#### Filter r values {.tabset .tabset-pills}
+
+As the table above shows, some features seem to have strong linear relationships, while some features seem to not have a strong linear relationship. To isolate those, we filtered for the absolute value of r-values only over `.9` to find the strongest feature relations. We chose `.9` as a threshold arbitrarily since there were many features that correlated. You can see some other thresholds below.
+
+**key**:
+
+ac = acousticness, db = danceability, dur = duration_ms, en = energy, ins = instrumentalness, li = liveness, lo = loudness, sp = speechiness, tmp = tempo, val = valence, pop = popularity
+
+##### threshold = `0.9`
+
+```{r rows.print=11}
+year2 <- year %>% 
+  rename(
+    yr = year,
+    ac = acousticness,
+    db = danceability,
+    dur = duration_ms,
+    en = energy,
+    ins = instrumentalness,
+    li = liveness,
+    lo = loudness,
+    sp = speechiness,
+    tmp = tempo,
+    val = valence,
+    pop = popularity,
+    k = key,
+    m = mode
+  )
+
+allr2 <- year %>% 
+  select(-c(year, key, mode)) %>% 
+  correlate()
+
+allr3 <- allr2
+
+threshold = 0.9
+b1 <- allr3 < threshold
+b2 <- allr3 > -threshold
+allr3[b1 & b2] <- NA # only check values that are above threshold for r
+
+allr <- year2 %>%
+  select(-c(yr, k, m)) %>%
+  cor() %>%
+  data.frame()
+threshold = 0.9
+b1 <- allr < threshold
+b2 <- allr > -threshold
+allr[allr == 1] <- NA
+allr[b1 & b2] <- NA
+```
+
+There are ``r sum(apply(allr, 2, function(x) length(which(!is.na(x))))) / 2`` r-values above this threshold.
+
+```{r rows.print=11}
+corrplot(
+  is.corr = FALSE,
+  corr = as.matrix(allr),
+  type = "upper",
+  upper = "number",
+  na.label = "?"
+)
+```
+
+
+##### `0.8`
+
+```{r}
+allr <- year2 %>%
+  select(-c(yr, k, m)) %>%
+  cor() %>%
+  data.frame()
+threshold = 0.8
+b1 <- allr < threshold
+b2 <- allr > -threshold
+allr[allr == 1] <- NA
+allr[b1 & b2] <- NA
+```
+
+There are ``r sum(apply(allr, 2, function(x) length(which(!is.na(x))))) / 2`` r-values above this threshold.
+
+```{r}
+corrplot(
+  is.corr = FALSE,
+  corr = as.matrix(allr),
+  type = "upper",
+  upper = "number",
+  na.label = "?"
+)
+```
+
+
+
+##### `0.7`
+
+```{r}
+allr <- year2 %>%
+  select(-c(yr, k, m)) %>%
+  cor() %>%
+  data.frame()
+threshold = 0.7
+b1 <- allr < threshold
+b2 <- allr > -threshold
+allr[allr == 1] <- NA
+allr[b1 & b2] <- NA
+```
+
+There are ``r sum(apply(allr, 2, function(x) length(which(!is.na(x))))) / 2`` r-values above this threshold.
+
+```{r}
+corrplot(
+  is.corr = FALSE,
+  corr = as.matrix(allr),
+  type = "upper",
+  upper = "number",
+  na.label = "?"
+)
+```
+
+
+##### `0.6`
+
+```{r}
+allr <- year2 %>%
+  select(-c(yr, k, m)) %>%
+  cor() %>%
+  data.frame()
+threshold = 0.6
+b1 <- allr < threshold
+b2 <- allr > -threshold
+allr[allr == 1] <- NA
+allr[b1 & b2] <- NA
+```
+
+There are ``r sum(apply(allr, 2, function(x) length(which(!is.na(x))))) / 2`` r-values above this threshold.
+
+```{r}
+corrplot(
+  is.corr = FALSE,
+  corr = as.matrix(allr),
+  type = "upper",
+  upper = "number",
+  na.label = "?"
+)
+```
+
+##### `none`
+
+```{r}
+allr <- year2 %>%
+  select(-c(yr, k, m)) %>%
+  cor() %>%
+  data.frame()
+threshold = 0
+b1 <- allr < threshold
+b2 <- allr > -threshold
+allr[allr == 1] <- NA
+allr[b1 & b2] <- NA
+```
+
+There are ``r sum(apply(allr, 2, function(x) length(which(!is.na(x))))) / 2`` r-values above this threshold.
+
+```{r}
+corrplot(
+  is.corr = FALSE,
+  corr = as.matrix(allr),
+  type = "upper",
+  upper = "number",
+  na.label = "?"
+)
+```
+
+### Top correlated features {.tabset .tabset-pills}
+
+Energy is included in each of the three strongest correlations. Energy is strongly related to acousticness, loudness and tempo. The three plots show each of the three features graphed vs energy. Each graph includes a line with a linear method to show the approximate linear regression line. While an increase in acousticness relates to a decrease in energy, an increase in loudness and tempo relates to an increase in energy.
+
+#### Acousticness vs Energy
+
+A negative correlation with r-value ``r cor(year$acousticness, year$energy)``.
+
+```{r}
+year %>% 
+  ggplot(aes(y = energy, x = acousticness)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  ggtitle("Relationship Between Acousticness and Energy") +
+  xlab("Acousticness") +
+  ylab("Energy")
+```
+
+#### Loudness vs Energy
+
+A positive correlation with r-value ``r cor(year$loudness, year$energy)``.
+
+```{r}
+year %>% 
+  ggplot(aes(y = energy, x = loudness)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  ggtitle("Relationship Between Loudness and Energy") +
+  xlab("Loudness") +
+  ylab("Energy")
+```
+
+#### Tempo vs Energy
+
+A positive correlation with r-value ``r cor(year$tempo, year$energy)``.
+
+```{r}
+year %>% 
+  ggplot(aes(y = energy, x = tempo)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  ggtitle("Relationship Between Tempo and Energy") +
+  xlab("Tempo") +
+  ylab("Energy")
+```
+
+### Tangental Correlations {.tabset .tabset-pills}
+
+In the below graph and table we can again see that there are strong correlations between energy and the other features acousticness, loudness, and tempo. However, it is also interesting to note that those same three features that we found correlate strongly with energy also correlate with each other, although to a lesser degree.
+
+It is hard to say what this means exactly, but it does suggest a few possibilities, and speak to the difference between correlation and causation. For example, there is a r-value of `-0.8715355` between tempo and loudness. However, since we know that both those features correlate even stronger with energy, it may be possible that what is more significant is their relation to energy. This shows that these features are all highly related, and the fact that they all also correlate highly with each other suggests these features all measure for something similar.
+
+#### Graph
+
+Plotted feature vs feature.
+
+```{r}
+pairs(year[,c(5, 2, 8, 10)])
+```
+
+#### Table
+
+The raw r-values.
+
+```{r}
+correlate(year[,c(5, 2, 8, 10)])
+```
+
+### More Analysis {.tabset .tabset-pills}
+
+As mentioned before, we chose the above threshold of `0.9` somewhat arbitrarily. 
+This was partially motivated by not wanting to make section 3.2.3 too complicated since the number of comparisons between features grows quadratically. 
+
+However, for completeness, we will show the relationships for the top correlated features above a `0.8` threshold since there seem to be some interesting relationships here as well. Comparing each of the features, ten r-values are above a threshold of 0.8. Acousticness, energy, instrumentalness, and loudness had a correlation over 0.8 with the popularity features. Acousticness, energy and loudness hit the threshold r-value with tempo. Finally, loudness had a strong correlation with acousticness and energy, and acoustiness had a high r-value with energy. It is interesting that all of the same features have these high correlations to each other.
+
+Below are the (seven) feature pairs above that were not included in the `0.9` section.
+
+#### Acousticness vs Loudness
+
+A negative relationship with r-value ``r cor(year$acousticness, year$loudness)``.
+
+```{r}
+year %>% 
+  ggplot(aes(x = acousticness, y = loudness)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  ggtitle("Relationship Between Acousticness and Loudness") +
+  xlab("Acousticness") +
+  ylab("Loudness")
+```
+
+#### Acousticness vs Tempo
+
+A negative relationship with r-value ``r cor(year$acousticness, year$tempo)``.
+
+```{r}
+year %>% 
+  ggplot(aes(x = acousticness, y = tempo)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  ggtitle("Relationship Between Acousticness and Tempo") +
+  xlab("Acousticness") +
+  ylab("Tempo")
+```
+
+#### Acousticness vs Popularity
+
+A negative relationship with r-value ``r cor(year$acousticness, year$popularity)``.
+
+```{r}
+year %>% 
+  ggplot(aes(x = acousticness, y = popularity)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  ggtitle("Relationship Between Acousticness and Popularity") +
+  xlab("Acousticness") +
+  ylab("Popularity")
+```
+
+#### Popularity vs Energy
+
+A positive relationship with r-value ``r cor(year$popularity, year$energy)``.
+
+```{r}
+year %>% 
+  ggplot(aes(x = popularity, y = energy)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  ggtitle("Relationship Between Popularity and Energy") +
+  xlab("Popularity") +
+  ylab("Energy")
+```
+
+#### Popularity vs Instrumentalness
+
+A negative relationship with r-value ``r cor(year$popularity, year$instrumentalness)``.
+
+```{r}
+year %>% 
+  ggplot(aes(x = popularity, y = instrumentalness)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  ggtitle("Relationship Between Popularity and Instrumentalness") +
+  xlab("Popularity") +
+  ylab("Instrumentalness")
+```
+
+#### Popularity vs Loudness
+
+A positive relationship with r-value ``r cor(year$popularity, year$loudness)``.
+
+```{r}
+year %>% 
+  ggplot(aes(x = popularity, y = loudness)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  ggtitle("Relationship Between Popularity and Loudness") +
+  xlab("Popularity") +
+  ylab("Loudness")
+```
+
+#### Loudness vs Tempo
+
+A positive relationship with r-value ``r cor(year$loudness, year$tempo)``.
+
+```{r}
+year %>% 
+  ggplot(aes(x = loudness, y = tempo)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  ggtitle("Relationship Between Loudness and Tempo") +
+  xlab("Loudness") +
+  ylab("Tempo")
+```
+
+
+#### "Tangental Correlations"
+
+These are all of the possible combinations of the features that have some correlation that pass the threshold of `0.8` similar to what was explored in section 3.2.3. Since there are many more features here it's a little more noisy (this is why we chose a threshold of `0.9` previously). We will not do analysis similar to what was done in 3.2.3 for this reason, but will include these graphics and r-values for completeness.
+
+```{r}
+pairs(year[,c(2, 5, 6, 8, 10, 12)])
+```
+
+Table of the r-values.
+
+```{r}
+correlate(year[,c(2, 5, 6, 8, 10, 12)])
+```
+
+
+## Genre Analysis
+
+### Density Plots {.tabset .tabset-pills}
+
+We created density plots to get an initial idea of the genres relations to each feature. These are messy so in the next section we will try to make sense of them. In particular, we will analyze the popularity feature as it relates to each genre.
+
+```{r}
+genres_names <- condensed$simple_genre %>% unique()
+
+feature_names <- colnames(condensed %>% select(-c(genres, simple_genre, key, mode)))
+```
+
+
+#### popularity
+
+```{r}
+condensed %>%
+  ggplot(aes(x = popularity, color = simple_genre)) +
+  geom_density() +
+  ggtitle(label = "Popularity Density Plot") +
+  theme_bw()
+```
+
+#### acousticness
+
+```{r}
+condensed %>%
+  ggplot(aes(x = acousticness, color = simple_genre)) +
+  geom_density() +
+  ggtitle(label = "Acousticness Density Plot") +
+  theme_bw()
+```
+
+#### danceability
+
+```{r}
+condensed %>%
+  ggplot(aes(x = danceability, color = simple_genre)) +
+  geom_density() +
+  ggtitle(label = "Danceability Density Plot") +
+  theme_bw()
+```
+
+#### duration (ms)
+
+```{r}
+condensed %>%
+  ggplot(aes(x = duration_ms, color = simple_genre)) +
+  geom_density() +
+  ggtitle(label = "Duration (ms) Density Plot") +
+  theme_bw()
+```
+
+#### energy
+
+```{r}
+condensed %>%
+  ggplot(aes(x = energy, color = simple_genre)) +
+  geom_density() +
+  ggtitle(label = "Energy Density Plot") +
+  theme_bw()
+```
+
+#### instrumentalness
+
+```{r}
+condensed %>%
+  ggplot(aes(x = instrumentalness, color = simple_genre)) +
+  geom_density() +
+  ggtitle(label = "Instrumentalness Density Plot") +
+  theme_bw()
+```
+
+#### liveness
+
+```{r}
+condensed %>%
+  ggplot(aes(x = liveness, color = simple_genre)) +
+  geom_density() +
+  ggtitle(label = "Liveness Density Plot") +
+  theme_bw()
+```
+
+#### loudness
+
+```{r}
+condensed %>%
+  ggplot(aes(x = loudness, color = simple_genre)) +
+  geom_density() +
+  ggtitle(label = "Loudness Density Plot") +
+  theme_bw()
+```
+
+#### speechiness
+
+```{r}
+condensed %>%
+  ggplot(aes(x = speechiness, color = simple_genre)) +
+  geom_density() +
+  ggtitle(label = "Speechiness Density Plot") +
+  theme_bw()
+```
+
+#### tempo
+
+```{r}
+condensed %>%
+  ggplot(aes(x = tempo, color = simple_genre)) +
+  geom_density() +
+  ggtitle(label = "Tempo Density Plot") +
+  theme_bw()
+```
+
+#### valence
+
+```{r}
+condensed %>%
+  ggplot(aes(x = valence, color = simple_genre)) +
+  geom_density() +
+  ggtitle(label = "Valence Density Plot") +
+  theme_bw()
+```
+
+### Assumptions {.tabset .tabset-pills}
+
+```{r}
+# setup
+foo <- condensed %>% 
+  group_by(simple_genre) %>% 
+  summarise(
+    n = n(),
+    # 
+    m_ac = mean(acousticness),
+    m_da = mean(danceability),
+    m_du = mean(duration_ms),
+    m_en = mean(energy),
+    m_in = mean(instrumentalness),
+    m_li = mean(liveness),
+    m_lo = mean(loudness),
+    m_sp = mean(speechiness),
+    m_te = mean(tempo),
+    m_va = mean(valence),
+    m_po = mean(popularity),
+    # 
+    sd_ac = sd(acousticness),
+    sd_da = sd(danceability),
+    sd_du = sd(duration_ms),
+    sd_en = sd(energy),
+    sd_in = sd(instrumentalness),
+    sd_li = sd(liveness),
+    sd_lo = sd(loudness),
+    sd_sp = sd(speechiness),
+    sd_te = sd(tempo),
+    sd_va = sd(valence),
+    sd_po = sd(popularity),
+  )
+```
+
+We cannot run a t-test on a population that isn't normal. So to check for normality, we plot the populations that we are testing. Of these, popularity is the most clearly normal so we will do most of our analysis with popularity. However, some other graphs seem possibly normal, such as danceability and liveness.
+
+```{r checking normality}
+# feature_names1 <- colnames(condensed %>% select(-c(genres, simple_genre, key, mode)))
+feature_names2 <- colnames(condensed %>% select(-c(genres, simple_genre, key, mode)))
+# for (i in seq(length(feature_names1))) {
+#   feature_names1[i] <- feature_names1[i] %>% substr(1, 2) %>% str_c("m_", .)
+# }
+# i <- 1
+# for (f in feature_names1) {
+#   gr <- foo %>%
+#     ggplot(aes_string(x = f)) +
+#     geom_density() +
+#     ggtitle(
+#       label = str_c(" ", feature_names2[i])
+#     )
+#   gr %>%
+#     print()
+#   gr %>% 
+#     typeof() %>% 
+#     print()
+#   i <- i + 1
+# }
+plot_normal = function (data, name) {
+  sm_name = str_c("m_",  substr(name, 1, 2))
+  data %>%
+    ggplot(aes_string(x = sm_name)) +
+    geom_density() +
+    ggtitle(
+      label = str_c("Distribution of ", name, " means")
+    ) +
+    xlab(str_c("mean ",name))
+}
+plots <- list()
+plots <- lapply(X = c(feature_names2), FUN = plot_normal, data = foo)
+```
+
+#### `r feature_names2[1]`
+
+```{r}
+plots[[1]]
+```
+
+#### `r feature_names2[2]`
+
+```{r}
+plots[[2]]
+```
+
+#### `r feature_names2[3]`
+
+```{r}
+plots[[3]]
+```
+
+#### `r feature_names2[4]`
+
+```{r}
+plots[[4]]
+```
+
+#### `r feature_names2[5]`
+
+```{r}
+plots[[5]]
+```
+
+#### `r feature_names2[6]`
+
+```{r}
+plots[[6]]
+```
+
+#### `r feature_names2[7]`
+
+```{r}
+plots[[7]]
+```
+
+#### `r feature_names2[8]`
+
+```{r}
+plots[[8]]
+```
+
+#### `r feature_names2[9]`
+
+```{r}
+plots[[9]]
+```
+
+#### `r feature_names2[10]`
+
+```{r}
+plots[[10]]
+```
+
+#### `r feature_names2[11]`
+
+```{r}
+plots[[11]]
+```
+
+### t-tests {.tabset .tabset-pills}
+
+```{r}
+t_test = function(mean1, sd1, total1, mean2, sd2, total2)
+{
+  z = (mean1 - mean2) /
+    sqrt((sd1 * sd1 / total1) + (sd2 * sd2 / total2))
+  if (total1 > total2) {
+    df = total2 - 1
+  }
+  else {
+    df = total1 - 1
+  }
+  
+  p_val = pt(z, df)
+  return (p_val)
+}
+```
+
+
+We ran t-tests to find differences between genres in the different features we considered normal. The t-test statistic^[http://www.sthda.com/english/wiki/t-test-formula] is as follows:
+
+* Let $a$ and $a$ be the two populations.
+* Let $m_a$ and $m_b$ be the means of each population
+* Let $s_a$ and $s_b$ be the standard deviations of each population
+* Let $n_a$ and $n_b$ be the sizes of each population
+
+$$
+t = \frac{m_a - m_b}{\sqrt{\frac{s_a^2}{n_a}+\frac{s_b^2}{n_b}}}
+$$
+
+We use this test statistic to calculate the p-value by finding the corresponding quantile from the student t distribution with $\max(n_a, n_b)-1$ degrees of freedom. While we will focus on analyzing popularity in particular in the next section, we do this test for danceability and popularity as well. The results of these tests are shown below.
+
+<!--
+#### acousticness
+
+All t-test between genres for acousticness.
+
+```{r}
+arr <- array(numeric(),
+              dim = c(21, 21),
+              dimnames = c(foo[, "simple_genre"], foo[, "simple_genre"])) %>% 
+    as.data.frame()
+
+for (i in seq(21)) {
+  for (j in seq(21)) {
+    t <-
+      t_test(foo$m_ac[i],
+             foo$sd_ac[i],
+             foo$n[i],
+             foo$m_ac[j],
+             foo$sd_ac[j],
+             foo$n[j])
+    # t %>% print()
+    arr[i, j] <- round(t, 4)
+  }
+}
+
+arr
+```
+
+Filtered for only significant differences (`p-value < 0.05`).
+
+```{r}
+# Filter
+arr2 <- arr
+arr2[arr2 > 0.05] <- NA
+arr2
+```
+
+-->
+
+#### danceability
+
+All t-test between genres for danceability.
+
+```{r}
+arr <- array(numeric(),
+              dim = c(21, 21),
+              dimnames = c(foo[, "simple_genre"], foo[, "simple_genre"])) %>% 
+    as.data.frame()
+
+for (i in seq(21)) {
+  for (j in seq(21)) {
+    t <-
+      t_test(foo$m_da[i],
+             foo$sd_da[i],
+             foo$n[i],
+             foo$m_da[j],
+             foo$sd_da[j],
+             foo$n[j])
+    # t %>% print()
+    arr[i, j] <- round(t, 4)
+  }
+}
+
+arr
+```
+
+Filtered for only significant differences (`p-value < 0.05`).
+
+```{r}
+# Filter
+arr2 <- arr
+arr2[arr2 > 0.05] <- NA
+arr2
+```
+
+<!--
+
+#### duration_ms
+
+All t-test between genres for duration_ms.
+
+```{r}
+arr <- array(numeric(),
+              dim = c(21, 21),
+              dimnames = c(foo[, "simple_genre"], foo[, "simple_genre"])) %>% 
+    as.data.frame()
+
+for (i in seq(21)) {
+  for (j in seq(21)) {
+    t <-
+      t_test(foo$m_du[i],
+             foo$sd_du[i],
+             foo$n[i],
+             foo$m_du[j],
+             foo$sd_du[j],
+             foo$n[j])
+    # t %>% print()
+    arr[i, j] <- round(t, 4)
+  }
+}
+
+arr
+```
+
+Filtered for only significant differences (`p-value < 0.05`).
+
+```{r}
+# Filter
+arr2 <- arr
+arr2[arr2 > 0.05] <- NA
+arr2
+```
+
+#### energy
+
+All t-test between genres for energy.
+
+```{r}
+arr <- array(numeric(),
+              dim = c(21, 21),
+              dimnames = c(foo[, "simple_genre"], foo[, "simple_genre"])) %>% 
+    as.data.frame()
+
+for (i in seq(21)) {
+  for (j in seq(21)) {
+    t <-
+      t_test(foo$m_en[i],
+             foo$sd_en[i],
+             foo$n[i],
+             foo$m_en[j],
+             foo$sd_en[j],
+             foo$n[j])
+    # t %>% print()
+    arr[i, j] <- round(t, 4)
+  }
+}
+
+arr
+```
+
+Filtered for only significant differences (`p-value < 0.05`).
+
+```{r}
+# Filter
+arr2 <- arr
+arr2[arr2 > 0.05] <- NA
+arr2
+```
+
+#### instrumentalness
+
+All t-test between genres for instrumentalness.
+
+```{r}
+arr <- array(numeric(),
+              dim = c(21, 21),
+              dimnames = c(foo[, "simple_genre"], foo[, "simple_genre"])) %>% 
+    as.data.frame()
+
+for (i in seq(21)) {
+  for (j in seq(21)) {
+    t <-
+      t_test(foo$m_in[i],
+             foo$sd_in[i],
+             foo$n[i],
+             foo$m_in[j],
+             foo$sd_in[j],
+             foo$n[j])
+    # t %>% print()
+    arr[i, j] <- round(t, 4)
+  }
+}
+
+arr
+```
+
+Filtered for only significant differences (`p-value < 0.05`).
+
+```{r}
+# Filter
+arr2 <- arr
+arr2[arr2 > 0.05] <- NA
+arr2
+```
+
+-->
+
+#### liveness
+
+All t-test between genres for liveness.
+
+```{r}
+arr <- array(numeric(),
+              dim = c(21, 21),
+              dimnames = c(foo[, "simple_genre"], foo[, "simple_genre"])) %>% 
+    as.data.frame()
+
+for (i in seq(21)) {
+  for (j in seq(21)) {
+    t <-
+      t_test(foo$m_li[i],
+             foo$sd_li[i],
+             foo$n[i],
+             foo$m_li[j],
+             foo$sd_li[j],
+             foo$n[j])
+    # t %>% print()
+    arr[i, j] <- round(t, 4)
+  }
+}
+
+arr
+```
+
+Filtered for only significant differences (`p-value < 0.05`).
+
+```{r}
+# Filter
+arr2 <- arr
+arr2[arr2 > 0.05] <- NA
+arr2
+```
+
+<!--
+
+#### loudness
+
+All t-test between genres for loudness.
+
+```{r}
+arr <- array(numeric(),
+              dim = c(21, 21),
+              dimnames = c(foo[, "simple_genre"], foo[, "simple_genre"])) %>% 
+    as.data.frame()
+
+for (i in seq(21)) {
+  for (j in seq(21)) {
+    t <-
+      t_test(foo$m_lo[i],
+             foo$sd_lo[i],
+             foo$n[i],
+             foo$m_lo[j],
+             foo$sd_lo[j],
+             foo$n[j])
+    # t %>% print()
+    arr[i, j] <- round(t, 4)
+  }
+}
+
+arr
+```
+
+Filtered for only significant differences (`p-value < 0.05`).
+
+```{r}
+# Filter
+arr2 <- arr
+arr2[arr2 > 0.05] <- NA
+arr2
+```
+
+#### speechiness
+
+All t-test between genres for speechiness.
+
+```{r}
+arr <- array(numeric(),
+              dim = c(21, 21),
+              dimnames = c(foo[, "simple_genre"], foo[, "simple_genre"])) %>% 
+    as.data.frame()
+
+for (i in seq(21)) {
+  for (j in seq(21)) {
+    t <-
+      t_test(foo$m_sp[i],
+             foo$sd_sp[i],
+             foo$n[i],
+             foo$m_sp[j],
+             foo$sd_sp[j],
+             foo$n[j])
+    # t %>% print()
+    arr[i, j] <- round(t, 4)
+  }
+}
+
+arr
+```
+
+Filtered for only significant differences (`p-value < 0.05`).
+
+```{r}
+# Filter
+arr2 <- arr
+arr2[arr2 > 0.05] <- NA
+arr2
+```
+
+#### tempo
+
+All t-test between genres for tempo.
+
+```{r}
+arr <- array(numeric(),
+              dim = c(21, 21),
+              dimnames = c(foo[, "simple_genre"], foo[, "simple_genre"])) %>% 
+    as.data.frame()
+
+for (i in seq(21)) {
+  for (j in seq(21)) {
+    t <-
+      t_test(foo$m_te[i],
+             foo$sd_te[i],
+             foo$n[i],
+             foo$m_te[j],
+             foo$sd_te[j],
+             foo$n[j])
+    # t %>% print()
+    arr[i, j] <- round(t, 4)
+  }
+}
+
+arr
+```
+
+Filtered for only significant differences (`p-value < 0.05`).
+
+```{r}
+# Filter
+arr2 <- arr
+arr2[arr2 > 0.05] <- NA
+arr2
+```
+
+#### valence
+
+All t-test between genres for valence.
+
+```{r}
+arr <- array(numeric(),
+              dim = c(21, 21),
+              dimnames = c(foo[, "simple_genre"], foo[, "simple_genre"])) %>% 
+    as.data.frame()
+
+for (i in seq(21)) {
+  for (j in seq(21)) {
+    t <-
+      t_test(foo$m_va[i],
+             foo$sd_va[i],
+             foo$n[i],
+             foo$m_va[j],
+             foo$sd_va[j],
+             foo$n[j])
+    # t %>% print()
+    arr[i, j] <- round(t, 4)
+  }
+}
+
+arr
+```
+
+Filtered for only significant differences (`p-value < 0.05`).
+
+```{r}
+# Filter
+arr2 <- arr
+arr2[arr2 > 0.05] <- NA
+arr2
+```
+
+-->
+
+#### popularity
+
+All t-test between genres for popularity.
+
+```{r}
+arr <- array(numeric(),
+              dim = c(21, 21),
+              dimnames = c(foo[, "simple_genre"], foo[, "simple_genre"])) %>% 
+    as.data.frame()
+
+for (i in seq(21)) {
+  for (j in seq(21)) {
+    t <-
+      t_test(foo$m_po[i],
+             foo$sd_po[i],
+             foo$n[i],
+             foo$m_po[j],
+             foo$sd_po[j],
+             foo$n[j])
+    # t %>% print()
+    arr[i, j] <- round(t, 4)
+  }
+}
+
+arr
+```
+
+Filtered for only significant differences (`p-value < 0.05`).
+
+```{r}
+# Filter
+arr2 <- arr
+arr2[arr2 > 0.05] <- NA
+arr2
+```
+
+### Popularity
+
+We decided to further examine the popularity of the genres in depth to see if we could discover the most popular genre(s). We focus on analyzing the feature popularity because we are the most confident it is normal, and also because the results make sense contextually.
+
+We made a graph to compare the box plots of all the genres with their popularity in order to get an overview of the distributions before jumping into our t tests. Overall, the boxplots show that rap has the highest mean popularity for all of the genres. Next, we will use t-tests to evaluate if the difference in the means of the genres is significant enough for us to conclude that rap has the highest mean popularity. 
+
+```{r}
+# condensed %>%
+#   ggplot(aes(y = simple_genre, x = popularity, fill = simple_genre)) +
+#   geom_boxplot() +
+#   theme_bw()
+condensed %>%
+  ggplot(aes(
+    y = reorder(simple_genre, popularity),
+    x = popularity,
+    fill = simple_genre
+  )) +
+  geom_boxplot() +
+  theme_bw()
+```
+
+We made a density plot of our estimator, the mean popularity, to check that it looks normally distributed. We did this so we know using a t-test is appropriate. As you can see, the plot seem normally distributed so a t-test is appropriate.
+
+```{r}
+foo <- condensed %>% 
+  group_by(simple_genre) %>% 
+  summarise(
+    n = n(),
+    # 
+    m_ac = mean(acousticness),
+    m_da = mean(danceability),
+    m_du = mean(duration_ms),
+    m_en = mean(energy),
+    m_in = mean(instrumentalness),
+    m_li = mean(liveness),
+    m_lo = mean(loudness),
+    m_sp = mean(speechiness),
+    m_te = mean(tempo),
+    m_va = mean(valence),
+    m_po = mean(popularity),
+    # 
+    sd_ac = sd(acousticness),
+    sd_da = sd(danceability),
+    sd_du = sd(duration_ms),
+    sd_en = sd(energy),
+    sd_in = sd(instrumentalness),
+    sd_li = sd(liveness),
+    sd_lo = sd(loudness),
+    sd_sp = sd(speechiness),
+    sd_te = sd(tempo),
+    sd_va = sd(valence),
+    sd_po = sd(popularity),
+  )
+
+foo %>%
+  ggplot(aes(x = m_po)) +
+  geom_density() +
+  ylab("Density") +
+  xlab("Mean Popularity") +
+  theme_bw()
+```
+
+
+<!-- We found the most popular by finding the genre with the highest mean popularity. Here you can see the genre with the highest mean popularity (m_po) was `rap` (sd_po is standard deviation of popularity). -->
+
+```{r}
+# foo %>% 
+#   select(simple_genre, n, m_po, sd_po) %>% 
+#   arrange(desc(m_po))
+```
+
+We then ran the t-test for the feature popularity between all genres (same as 3.3.3).
+
+```{r}
+arr <- array(numeric(),
+              dim = c(21, 21),
+              dimnames = c(foo[, "simple_genre"], foo[, "simple_genre"])) %>% 
+    as.data.frame()
+
+for (i in seq(21)) {
+  for (j in seq(21)) {
+    t <-
+      t_test(foo$m_po[i],
+             foo$sd_po[i],
+             foo$n[i],
+             foo$m_po[j],
+             foo$sd_po[j],
+             foo$n[j])
+    # t %>% print()
+    arr[i, j] <- round(t, 4)
+  }
+}
+```
+
+#### t-test p-value tables {.tabset .tabset-pills}
+
+##### All t-tests for popularity.
+
+```{r}
+arr
+```
+
+##### Isolated `rap` column.
+
+```{r}
+arr['rap']
+```
+
+#### 
+
+Next we isolated the genres that didn't have `p-value < 0.05` to find the genres cannot be dismissed as having a different popularity from rap.
+
+```{r}
+# arr2[18] %>% filter(is.na(rap))
+arr[18] %>% filter(rap > 0.05 & rap != 0.5000)
+```
+
+To see if this makes sense, we show the mean and standard deviation of popularity from these genres. As you can see, their means were very similar, so it makes sense that their p-values were not significant.
+
+```{r}
+same_as_rap <- arr2[18] %>% filter(is.na(rap)) %>% row.names()
+foo %>%
+  filter(simple_genre %in% same_as_rap) %>%
+  select(simple_genre, n, m_po, sd_po)
+```
+
+<!-- The following boxplot shows the popularity for hip, rap, and swedish. -->
+
+```{r}
+# Advised to remove bar graph in favor of box plot
+# foo %>%
+#   filter(simple_genre %in% same_as_rap) %>%
+#   select(simple_genre, n, m_po, sd_po) %>%
+#   ggplot(aes(x = simple_genre, y = m_po, fill = simple_genre)) +
+#   geom_col() +
+#   xlab("Genre") +
+#   guides(fill = guide_legend(title = "Genre")) +
+#   ylab("Mean Popularity")
+
+# condensed %>%
+#   filter(simple_genre %in% same_as_rap) %>%
+#   # select(simple_genre, n, m_po, sd_po) %>%
+#   ggplot(aes(x = simple_genre, y = popularity, fill = simple_genre)) +
+#   # geom_col() +
+#   geom_boxplot() +
+#   xlab("Genre") +
+#   guides(fill = guide_legend(title = "Genre")) +
+#   ylab("Popularity")
+```
+
+To put these results back into context, we come back to the original boxplots we had. Now, we can draw a line that divides what we can consider the most popular genres from the rest. In this way we can conclude that the simplified genres rap, hip, and swedish are the most popular genres.
+
+```{r}
+condensed %>%
+  ggplot(aes(
+    y = reorder(simple_genre, popularity),
+    x = popularity,
+    fill = simple_genre
+  )) +
+  geom_boxplot() +
+  geom_hline(yintercept = 21-3+.5, color="red", linetype="dashed") +
+  ylab("Simple Genre") +
+  ggtitle(
+    label = "Most Popular Genres"
+    )
+```
+
+
+# Discussion
+If we were to determine the most popular we would need to observe a significant difference between all other values and the top popularity genre mean. From our t-tests to test the genre popularity means, we were not able to come to a definite conclusion on which genre is the most popular. Because all of the p-values are not below .05, we do not have statistical evidence to reject the null that the rap mean is significantly higher than the rest of the genres. Hip and swedish have p-values above .05, so they could all still be the most popular. However, for the genres with p-values below .05, we do have statistical significance evidence that they are not the most popular. This information could be useful for someone trying to create a song because it will give them input into which genres are most popular with listeners. By creating a song in a more popular genre, people may be more likely to listen to the song, which can generate more revenue for the artist. 
+ 
+We also discovered which features have the strongest linear correlations to each other, vs which features have no linear relationship. We found that energy has a correlation over the absolute value of 0.9 to three other features, acousticness, loudness and tempo. Acousticness has a negative correlation with energy while loudness and tempo both have positive correlations with energy. Considering that acousticness, loudness, and tempo are all measured based on set measurements, while energy is calculated from intensity and activity in the song, we can infer that acousticness, loudness, and tempo all affect the energy of a song. This finding matters because when a producer is trying to make different characteristics of a song come together perfectly, the correlations between specific features may help them adjust said features in order to compliment each other better. 
+ 
+A short-coming of our analysis is that we do not know how many songs are included in the data for each genre. Some genre’s data may be based on more songs than other genres. In addition, because we only filtered the top 20 highest strings to group genres, some of the genres are not included in our analysis.
+
+Another short-coming was the way in which we created our simplified genres. We used regular expressions that split the original genre names by whitespace, but this resulted in multiple issues. One was the issue of double-counting genres such as `african rap` being counted as `african` and `rap`. Another issue was the fact that some genres like `hip-hop` wouldn't always be seperated by a hyphen in the dataset, so in our top 20 genres we actually have two genres called `hip` and `hop` that likely correspond to just one genre (`hip-hop`). One possible fix to this might have been to do preprocessing for these special cases like replacing the space between `"hip hop"` so it became `"hip-hop"`.
+ 
+Future work on this dataset could involve testing out more of the features relationships and seeing if they have strong models. We could also look for datasets from other music streaming services, such as Apple Music and Pandora.
+
+
+# References 
+
+```{r}
+# Change settings below this line
+knitr::opts_chunk$set(
+  echo = FALSE,
+  results = FALSE,
+  fig.show = 'hide',
+  warning = FALSE,
+  message = FALSE,
+  include = FALSE
+)
+```
+
+<!-- Additional Analysis is commented out so it's possible to knit everything without taking a really long time. -->
+
+<!--
+
+```{r additional data analysis}
+## Feature comparisons
+
+### Graphs of Combinations of Features {.tabset .tabset-pills}
+
+# (All / many) combinations graphs:
+
+#### Select few
+
+pairs(year[,c(5, 2, 7, 8)])
+
+#### All
+pairs(year[2:12])
+
+foo %>%
+  ggplot(aes(x = m_ac)) +
+  geom_density()
+foo %>%
+  ggplot(aes(x = m_da)) +
+  geom_density()
+foo %>%
+  ggplot(aes(x = m_du)) +
+  geom_density()
+foo %>%
+  ggplot(aes(x = m_en)) +
+  geom_density()
+foo %>%
+  ggplot(aes(x = m_in)) +
+  geom_density()
+foo %>%
+  ggplot(aes(x = m_li)) +
+  geom_density()
+foo %>%
+  ggplot(aes(x = m_lo)) +
+  geom_density()
+foo %>%
+  ggplot(aes(x = m_sp)) +
+  geom_density()
+foo %>%
+  ggplot(aes(x = m_te)) +
+  geom_density()
+foo %>%
+  ggplot(aes(x = m_va)) +
+  geom_density()
+foo %>%
+  ggplot(aes(x = m_po)) +
+  geom_density()
+
+
+# Analysis [DO NOT INCLUDE]
+
+# > Your data analysis should include substantial data exploration including graphical and numerical summaries which do not appear in the final report. You may exclude such analysis by using include=FALSE in the corresponding R chunks.
+
+## Simplify genre categories
+
+
+genre <- read_csv("data/data_by_genres.csv", col_types = cols())
+x <- genre %>% 
+  select(genres) %>% 
+  mutate(
+    words = str_split(genres, "\\s"),
+  )
+all_terms <- tibble(term = unlist(x$words, recursive = FALSE))
+# Top terms (double counts...)
+genre_term_count <- all_terms %>% 
+  group_by(term) %>% 
+  summarise(n = n()) %>% 
+  arrange(desc(n)) %>% 
+  head(20)
+
+# higher in case when get priority
+condensed <- genre %>% 
+  mutate(
+    simple_genre = case_when(
+      str_detect(genres, genre_term_count$term[1]) ~ genre_term_count$term[1],
+      str_detect(genres, genre_term_count$term[2]) ~ genre_term_count$term[2],
+      str_detect(genres, genre_term_count$term[3]) ~ genre_term_count$term[3],
+      str_detect(genres, genre_term_count$term[4]) ~ genre_term_count$term[4],
+      str_detect(genres, genre_term_count$term[5]) ~ genre_term_count$term[5],
+      str_detect(genres, genre_term_count$term[6]) ~ genre_term_count$term[6],
+      str_detect(genres, genre_term_count$term[7]) ~ genre_term_count$term[7],
+      str_detect(genres, genre_term_count$term[8]) ~ genre_term_count$term[8],
+      str_detect(genres, genre_term_count$term[9]) ~ genre_term_count$term[9],
+      str_detect(genres, genre_term_count$term[10]) ~ genre_term_count$term[10],
+      str_detect(genres, genre_term_count$term[11]) ~ genre_term_count$term[11],
+      str_detect(genres, genre_term_count$term[12]) ~ genre_term_count$term[12],
+      str_detect(genres, genre_term_count$term[13]) ~ genre_term_count$term[13],
+      str_detect(genres, genre_term_count$term[14]) ~ genre_term_count$term[14],
+      str_detect(genres, genre_term_count$term[15]) ~ genre_term_count$term[15],
+      str_detect(genres, genre_term_count$term[16]) ~ genre_term_count$term[16],
+      str_detect(genres, genre_term_count$term[17]) ~ genre_term_count$term[17],
+      str_detect(genres, genre_term_count$term[18]) ~ genre_term_count$term[18],
+      str_detect(genres, genre_term_count$term[19]) ~ genre_term_count$term[19],
+      str_detect(genres, genre_term_count$term[20]) ~ genre_term_count$term[20],
+      TRUE ~ "other"
+    )
+  )
+
+condensed %>%
+  group_by(simple_genre) %>%
+  summarise(n = n()) %>%
+  arrange(desc(n))
+
+## All feature vs. feature
+
+for (var_name in colnames(year)[2:12]) {
+  condensed %>%
+    ggplot(aes(y = simple_genre, x = get(condensed, var_name))) +
+    geom_boxplot() %>%
+    print()
+}
+
+
+## All r-values
+
+year <- read_csv("data/data_by_year.csv", col_types = cols())
+
+# All r values
+allr <- year %>%
+  select(-c(year, key, mode)) %>%
+  cor() %>%
+  round(digits = 2) %>%
+  data.frame()
+
+allr2 <- year %>% 
+  select(-c(year, key, mode)) %>% 
+  correlate()
+
+allr2
+
+allr3 <- allr2
+
+allr4 <- allr2
+
+threshold = 0.8
+b1 <- allr4 < threshold
+b2 <- allr4 > -threshold
+
+allr4[b1 & b2] <- NA # only check values that are above threshold for r
+allr4
+
+threshold = 0.9
+b1 <- allr3 < threshold
+b2 <- allr3 > -threshold
+
+allr3[b1 & b2] <- NA # only check values that are above threshold for r
+allr3
+
+
+### r-values {.tabset .tabset-pills}
+
+# Just display r-value on graphs:
+
+# year %>% glimpse()
+
+year2 <- year %>% 
+  rename(
+    yr = year,
+    ac = acousticness,
+    db = danceability,
+    dur = duration_ms,
+    en = energy,
+    ins = instrumentalness,
+    li = liveness,
+    lo = loudness,
+    sp = speechiness,
+    tmp = tempo,
+    val = valence,
+    pop = popularity,
+    k = key,
+    m = mode
+  )
+
+
+#### Upper number
+
+corrplot(
+  round(cor(year2[2:12]), 1),
+  method = "number",
+  type = "upper" # show only upper side
+)
+
+
+#### Upper color
+
+corrplot(
+  round(cor(year2[2:12]), 1),
+  method = "color",
+  type = "upper" # show only upper side
+)
+
+year %>% 
+  ggplot(aes(x = energy, y = acousticness)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  theme_bw()
+
+year %>% 
+  ggplot(aes(x = energy, y = loudness)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  theme_bw()
+
+year %>% 
+  ggplot(aes(x = energy, y = tempo)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  theme_bw()
+
+## Displaying all r-values
+
+
+# All graphs
+for (a in colnames(year)[2:12]) {
+  for (b in colnames(year)[2:12]) {
+    if (a > b) {
+      g <- year %>%
+        summarise(
+          a_var = get(a),
+          b_var = get(b)
+        ) %>%
+        ggplot(aes(x = a_var, y = b_var)) +
+        geom_point() +
+        labs(
+          x = a,
+          y = b
+          )
+      print(g)
+    }
+  }
+}
+
+# https://statsandr.com/blog/correlation-coefficient-and-correlation-test-in-r/
+
+# only some
+pairs(year[,c(5, 2, 7, 8)])
+
+# all
+pairs(year[2:12])
+
+year_sh <- year %>% 
+  rename(
+    yr = year,
+    ac = acousticness,
+    db = danceability,
+    dur = duration_ms,
+    en = energy,
+    ins = instrumentalness,
+    li = liveness,
+    lo = loudness,
+    sp = speechiness,
+    tmp = tempo,
+    val = valence,
+    pop = popularity,
+    k = key,
+    m = mode
+  )
+
+corrplot.mixed(
+  round(cor(year_sh[2:12]), 1),
+  lower = "number",
+  upper = "color"
+)
+
+genre_data <- read_csv("data/data_by_genres.csv")
+year_data <- read_csv("data/data_by_year.csv")
+
+ggplot(year_data) +
+  geom_point(aes(x = year, y = acousticness))
+
+ggplot(year_data) +
+  geom_point(aes(x = year, y = danceability))
+
+ggplot(year_data) +
+  geom_point(aes(x = year, y = loudness))
+
+ggplot(year_data) +
+  geom_point(aes(x = year, y = liveness))
+
+ggplot(year_data) +
+  geom_point(aes(x = year, y = energy))
+
+ggplot(year_data) +
+  geom_point(aes(x = energy, y = loudness))
+
+
+condensed %>%
+  group_by(simple_genre) %>%
+  summarise(
+    n = n(),
+    ) %>%
+  arrange(desc(n))
+
+condensed %>%
+  filter(simple_genre == "other") %>%
+  ggplot(aes(x = acousticness)) +
+  geom_density()
+
+condensed %>%
+  filter(simple_genre == "pop") %>%
+  ggplot(aes(x = acousticness)) +
+  geom_density()
+
+condensed %>%
+  filter(simple_genre == "indie") %>%
+  ggplot(aes(x = acousticness)) +
+  geom_density()
+
+condensed %>%
+  filter(simple_genre == "rock") %>%
+  ggplot(aes(x = acousticness)) +
+  geom_density()
+
+
+
+colnames(condensed %>% select(-c(genres, key, mode, simple_genre)))
+# acousticness danceability duration_ms energy instrumentalness liveness loudness speechiness tempo valence popularity  
+# "acousticness" "danceability" "duration_ms" "energy" "instrumentalness" "liveness" "loudness" "speechiness" "tempo" "valence" "popularity"
+```
+
+```{r}
+foo %>%
+  ggplot(aes(x = m_po)) +
+  geom_density() +
+  ylab("Density") +
+  xlab("Mean Popularity") +
+  theme_bw()
+```
+
+```{r check normality}
+# genres_names <- condensed$simple_genre %>% unique()
+# feature_names <- colnames(condensed %>% select(-c(genres, simple_genre, key, mode)))
+# for (i in seq(length(feature_names))) {
+#   feature_names[i] <- feature_names[i] %>% substr(1, 2) %>% str_c("m_", .) %>% print()
+# }
+# for (g in genres_names) {
+#   for (f in feature_names) {
+#     gr <- condensed %>%
+#       filter(simple_genre == g) %>%
+#       ggplot(aes_string(x = f)) +
+#       geom_density() +
+#       ggtitle(
+#         label = str_c(g, " ", f)
+#       ) +
+#       theme_bw()
+#     gr %>%
+#       print()
+#   }
+# }
+
+feature_names <- colnames(condensed %>% select(-c(genres, simple_genre, key, mode)))
+feature_names2 <- colnames(condensed %>% select(-c(genres, simple_genre, key, mode)))
+for (i in seq(length(feature_names))) {
+  feature_names[i] <- feature_names[i] %>% substr(1, 2) %>% str_c("m_", .)
+}
+i <- 1
+for (f in feature_names) {
+  gr <- foo %>%
+    ggplot(aes_string(x = f)) +
+    geom_density() +
+    ggtitle(
+      label = str_c(" ", feature_names2[i])
+    ) +
+    theme_bw()
+  gr %>%
+    print()
+  i <- i + 1
+}
+```
+
+```{r}
+# Generate with for loop
+
+for (f in feature_names2) {
+  gr <- condensed %>%
+    ggplot(aes_string(x = f, color = quote(simple_genre))) +
+    geom_density() +
+    ggtitle(label = str_c(f)) +
+    theme_bw()
+  gr %>%
+    print()
+}
+```
+
+```{r}
+# colnames(condensed %>% select(-c(genres, key, mode, simple_genre)))
+
+
+### Genres vs instrumentalness (geom_points)
+
+condensed %>% 
+  ggplot(aes(y = simple_genre, x = instrumentalness)) +
+  geom_point() +
+  theme_bw()
+
+### Genres vs instrumentalness (geom_col) 
+
+condensed %>%
+  select(simple_genre, instrumentalness) %>% 
+  group_by(simple_genre) %>%
+  summarise(mean_inst = mean(instrumentalness)) %>% 
+  ggplot(aes(y = simple_genre, x = mean_inst)) +
+  geom_col() +
+  theme_bw()
+### Boxplots {.tabset .tabset-pills}
+
+# We made boxplots on each genre for all of features.
+
+#### Acousticness
+
+condensed %>%
+  ggplot(aes(y = simple_genre, x = acousticness, fill = simple_genre)) +
+  geom_boxplot() +
+  theme_bw()
+
+#### Danceability
+
+condensed %>%
+  ggplot(aes(y = simple_genre, x = danceability, fill = simple_genre)) +
+  geom_boxplot() +
+  theme_bw()
+
+#### Duration_ms
+
+condensed %>%
+  ggplot(aes(y = simple_genre, x = duration_ms, fill = simple_genre)) +
+  geom_boxplot() +
+  theme_bw()
+
+#### Energy
+
+condensed %>%
+  ggplot(aes(y = simple_genre, x = energy, fill = simple_genre)) +
+  geom_boxplot() +
+  theme_bw()
+
+#### Instrumentalness
+
+condensed %>%
+  ggplot(aes(y = simple_genre, x = instrumentalness, fill = simple_genre)) +
+  geom_boxplot() +
+  theme_bw()
+
+#### Liveness
+
+condensed %>%
+  ggplot(aes(y = simple_genre, x = liveness, fill = simple_genre)) +
+  geom_boxplot() +
+  theme_bw()
+
+#### Loudness
+
+condensed %>%
+  ggplot(aes(y = simple_genre, x = loudness, fill = simple_genre)) +
+  geom_boxplot() +
+  theme_bw()
+
+#### Speechiness
+
+condensed %>%
+  ggplot(aes(y = simple_genre, x = speechiness, fill = simple_genre)) +
+  geom_boxplot() +
+  theme_bw()
+
+#### Valence
+
+condensed %>%
+  ggplot(aes(y = simple_genre, x = valence, fill = simple_genre)) +
+  geom_boxplot() +
+  theme_bw()
+
+#### Tempo
+
+condensed %>%
+  ggplot(aes(y = simple_genre, x = tempo, fill = simple_genre)) +
+  geom_boxplot() +
+  theme_bw()
+
+#### Popularity
+
+condensed %>%
+  ggplot(aes(y = simple_genre, x = popularity, fill = simple_genre)) +
+  geom_boxplot() +
+  theme_bw()
+
+```
+
+-->
