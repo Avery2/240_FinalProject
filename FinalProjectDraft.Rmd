@@ -1455,7 +1455,7 @@ for (i in seq(21)) {
 arr
 ```
 
-Next we isolated the genres that didn't have `p-value < 0.5` to find the genres cannot be dismissed as having a different popularity from rap.
+Next we isolated the genres that didn't have `p-value < 0.05` to find the genres cannot be dismissed as having a different popularity from rap.
 
 ```{r}
 # arr2[18] %>% filter(is.na(rap))
