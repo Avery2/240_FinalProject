@@ -980,7 +980,7 @@ for (i in seq(21)) {
 arr
 ```
 
-Filtered for only significant differences (`p-value < 0.5`).
+Filtered for only significant differences (`p-value < 0.05`).
 
 ```{r}
 # Filter
@@ -1018,7 +1018,7 @@ for (i in seq(21)) {
 arr
 ```
 
-Filtered for only significant differences (`p-value < 0.5`).
+Filtered for only significant differences (`p-value < 0.05`).
 
 ```{r}
 # Filter
@@ -1056,7 +1056,7 @@ for (i in seq(21)) {
 arr
 ```
 
-Filtered for only significant differences (`p-value < 0.5`).
+Filtered for only significant differences (`p-value < 0.05`).
 
 ```{r}
 # Filter
@@ -1092,7 +1092,7 @@ for (i in seq(21)) {
 arr
 ```
 
-Filtered for only significant differences (`p-value < 0.5`).
+Filtered for only significant differences (`p-value < 0.05`).
 
 ```{r}
 # Filter
@@ -1128,7 +1128,7 @@ for (i in seq(21)) {
 arr
 ```
 
-Filtered for only significant differences (`p-value < 0.5`).
+Filtered for only significant differences (`p-value < 0.05`).
 
 ```{r}
 # Filter
@@ -1166,7 +1166,7 @@ for (i in seq(21)) {
 arr
 ```
 
-Filtered for only significant differences (`p-value < 0.5`).
+Filtered for only significant differences (`p-value < 0.05`).
 
 ```{r}
 # Filter
@@ -1204,7 +1204,7 @@ for (i in seq(21)) {
 arr
 ```
 
-Filtered for only significant differences (`p-value < 0.5`).
+Filtered for only significant differences (`p-value < 0.05`).
 
 ```{r}
 # Filter
@@ -1240,7 +1240,7 @@ for (i in seq(21)) {
 arr
 ```
 
-Filtered for only significant differences (`p-value < 0.5`).
+Filtered for only significant differences (`p-value < 0.05`).
 
 ```{r}
 # Filter
@@ -1276,7 +1276,7 @@ for (i in seq(21)) {
 arr
 ```
 
-Filtered for only significant differences (`p-value < 0.5`).
+Filtered for only significant differences (`p-value < 0.05`).
 
 ```{r}
 # Filter
@@ -1312,7 +1312,7 @@ for (i in seq(21)) {
 arr
 ```
 
-Filtered for only significant differences (`p-value < 0.5`).
+Filtered for only significant differences (`p-value < 0.05`).
 
 ```{r}
 # Filter
@@ -1350,7 +1350,7 @@ for (i in seq(21)) {
 arr
 ```
 
-Filtered for only significant differences (`p-value < 0.5`).
+Filtered for only significant differences (`p-value < 0.05`).
 
 ```{r}
 # Filter
