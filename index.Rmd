@@ -1,5 +1,5 @@
 ---
-title: "index"
+title: "Spotify Data Analysis"
 author: "Breanna Schneider, Avery Chan, Maja Velichkovich"
 date: "4/11/2021"
 output:
@@ -1552,6 +1552,50 @@ knitr::opts_chunk$set(
   include = FALSE
 )
 ```
+
+```{r more tests to distinguish}
+# This is additional analysis to not just distinguish the MOST popular genres, but instead to divide the genres into groups of popularity. This was done manually and was somewhat tedious so we did not include it in the actual report.
+
+nm <- condensed %>% 
+  group_by(simple_genre) %>% 
+  summarise(
+    m = mean(popularity)
+  ) %>% 
+  arrange()
+
+arr["indie"] %>% 
+  filter(indie > 0.05) # lowest pop is japanese
+
+arr["metal"] %>% 
+  filter(metal > 0.05) # lowest pop is folk
+
+arr["classical"] %>% 
+  filter(classical > 0.05) # lowest pop is italian
+
+arr["german"] %>% 
+  filter(german > 0.05)
+
+arr["techno"] %>% 
+  filter(techno > 0.05)
+
+condensed %>%
+  ggplot(aes(
+    y = reorder(simple_genre, popularity),
+    x = popularity,
+    fill = simple_genre
+  )) +
+  geom_boxplot() +
+  geom_hline(yintercept = 21-3+.5, color="red", linetype="dashed") +
+  geom_hline(yintercept = 21-8+.5, color="red", linetype="dashed") +
+  geom_hline(yintercept = 21-13+.5, color="red", linetype="dashed") +
+  geom_hline(yintercept = 21-19+.5, color="red", linetype="dashed") +
+  geom_hline(yintercept = 21-20+.5, color="red", linetype="dashed") +
+  ylab("Simple Genre") +
+  ggtitle(
+    label = "Most Popular Genres"
+    )
+```
+
 
 <!-- Additional Analysis is commented out so it's possible to knit everything without taking a really long time. -->
 
