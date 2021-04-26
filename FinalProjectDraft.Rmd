@@ -539,6 +539,7 @@ correlate(year[,c(5, 2, 8, 10)])
 
 As mentioned before, we chose the above threshold of `0.9` somewhat arbitrarily. 
 This was partially motivated by not wanting to make section 3.2.3 too complicated since the number of comparisons between features grows quadratically. 
+
 However, for completeness, we will show the relationships for the top correlated features above a `0.8` threshold since there seem to be some interesting relationships here as well. Comparing each of the features, ten r-values are above a threshold of 0.8. Acousticness, energy, instrumentalness, and loudness had a correlation over 0.8 with the popularity features. Acousticness, energy and loudness hit the threshold r-value with tempo. Finally, loudness had a strong correlation with acousticness and energy, and acoustiness had a high r-value with energy. It is interesting that all of the same features have these high correlations to each other.
 
 #### Acousticness vs Loudness
