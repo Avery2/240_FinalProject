@@ -30,14 +30,14 @@ year <- read_csv("data/data_by_year.csv", col_types = cols())
 
 # Introduction
  
-Spotify is one of the larger music streaming services available today with 345 million active users ^[[Spotify Company Info](https://newsroom.spotify.com/company-info/)]. Instead of having to buy cd’s or download every song you listen to, Spotify allows access to millions of songs. Because Spotify is a centralized platform, it provides us with an opportunity to ask questions about what makes songs successful. 
+Spotify is one of the larger music streaming services available today with 345 million active users ^[https://newsroom.spotify.com/company-info/]. Instead of having to buy cd’s or download every song you listen to, Spotify allows access to millions of songs. Because Spotify is a centralized platform, it provides us with an opportunity to ask questions about what makes songs successful. 
 
 In order to investigate what makes some songs more successful than others, we will look at if certain features have a strong correlation with other features. In addition, we want to discover the most popular genre. Our data will specify a few genres that may be the most popular. Certain features will be strongly correlated to other features. 
  
 
 # Background 
  
-The data we are using is based on Spotify data from 1921 to 2020 including over 175,000 audio tracks.We found our data on Kaggle ^[[Kaggle Data](https://www.kaggle.com/yamaerenay/spotify-dataset-19212020-160k-tracks?select=data_by_artist_o.csv)]. This dataset groups the data by artist, genre, and year. There are nine different variables measured in the dataset. They are acousticness, danceability, duration, energy, liveness, instrumentalness, loudness, speechiness, valence, popularity, and tempo. 
+The data we are using is based on Spotify data from 1921 to 2020 including over 175,000 audio tracks.We found our data on Kaggle ^[https://www.kaggle.com/yamaerenay/spotify-dataset-19212020-160k-tracks?select=data_by_artist_o.csv]. This dataset groups the data by artist, genre, and year. There are nine different variables measured in the dataset. They are acousticness, danceability, duration, energy, liveness, instrumentalness, loudness, speechiness, valence, popularity, and tempo. 
  
 Energy (en) is a perceptual measure of the intensity and activity of a track on a scale from 0.0 to 1.0. Some of the perceptual features that are included in this are dynamic range, perceived loudness, timbre, onset rate, and general entropy. Liveness (li) ranges from 0 to 1 and detects if an audience is present in a recording. If the liveness value is above 0.8, there is a strong likelihood that the track is live. Acousticness (ac) is the confidence measure of the track being acoustic. It varies from 0.0 to 1.0, with 1.0 representing high confidence that the track is acoustic. Loudness (lo) ranges from -60 to 0 and is measured in decibels (dB). It suggests the overall loudless averaged over the entire track. The measure of danceability (db) includes a combination of tempo,  rhythm stability, beat strength and regularity. It rates how suitable a track is for dancing from 0.0 to 1.0 with 1 being the most danceable. Duration (dur) measures the length of the track in milliseconds (ms). The instrumentalness (ins) feature tracks whether a song contains vocals. “Ooh” and “aah” sounds are treated as instrumental in this context. Rap or spoken word tracks are considered vocal. Instrumentalness ranges from 0 to 1.0 with 1.0 being the most instrumental. Speechiness (sp) is the opposite of instrumentalness, measuring the relative length of the track containing any kind of human voice. The tempo (tmp) feature gives information on the tempo of the track in Beat Per Minute (BPM). Valence (val) measures the positiveness of the track, higher valence relates to more cheerful and upbeat songs. Lastly, popularity (pop) is calculated by an algorithm that is based on the total number of plays the track has had and how recent those plays are. 
  
@@ -939,7 +939,7 @@ t_test = function(mean1, sd1, total1, mean2, sd2, total2)
 ```
 
 
-We ran t-tests to find differences between genres in the different features we considered normal. The t-test statistic^[[t-test formula](http://www.sthda.com/english/wiki/t-test-formula)] is as follows:
+We ran t-tests to find differences between genres in the different features we considered normal. The t-test statistic^[http://www.sthda.com/english/wiki/t-test-formula] is as follows:
 
 * Let $a$ and $a$ be the two populations.
 * Let $m_a$ and $m_b$ be the means of each population
@@ -1377,10 +1377,7 @@ condensed %>%
     fill = simple_genre
   )) +
   geom_boxplot() +
-  ylab("Simple Genre") +
-  ggtitle(
-    label = "Most Popular Genres"
-    )
+  theme_bw()
 ```
 
 We made a density plot of our estimator, the mean popularity, to check that it looks normally distributed. We did this so we know using a t-test is appropriate. As you can see, the plot seem normally distributed so a t-test is appropriate.
